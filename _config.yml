@@ -3,17 +3,17 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: "浅海拾贝 - 寻找未知的技术拼图"
+title: "林庭晚阖"
 subtitle: "寻找未知的技术拼图"
-description: "浅海拾贝是关注与分享互联网及服务端开发技术的个人博客，致力于Java后端开发及服务端技术、软件架构、微服务技术分享"
-keywords: "软件架构,服务端开发,Java,Spring,Dubbo,Zookeeper,微服务"
-author: "Terwer"
+description: "狠狠地卷"
+keywords: "软件架构,服务端开发,Go,微服务,数据结构与算法,底层"
+author: "luommy"
 language: zh-CN
 timezone: "Asia/Shanghai"
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: https://hexo.terwer.space
+url: https://luommy.github.io
 #permalink: :year/:month/:day/:title/
 permalink: /post/:title.html
 permalink_defaults:
@@ -23,7 +23,7 @@ pretty_urls:
 
 # Directory
 source_dir: source
-public_dir: docs
+public_dir: public
 tag_dir: tags
 archive_dir: archives
 category_dir: categories
