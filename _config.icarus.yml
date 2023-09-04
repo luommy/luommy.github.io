@@ -120,10 +120,10 @@ navbar:
     links:
         发邮件:
             icon: fab fa-regular fa-envelope
-            url: mailto:youweics@163.com
+            url: mailto:jdonglecool@163.com
         GitHub:
             icon: fab fa-github
-            url: https://github.com/terwer/hexo-blog
+            url: https://github.com/luommy
 # Page footer configurations
 footer:
     # Copyright text
@@ -242,12 +242,12 @@ widgets:
         position: left
         type: profile
         # Author name
-        author: Terwer
+        author: luommy
         # Author title
-        author_title: 纸上得来终觉浅，绝知此事要躬行。
+        author_title: Un vrai maître garde toujours le cœur d'un apprenti ！
         # Author's current location
         # location: 深圳
-        location:
+        location: San Francisco
         # URL or path to the avatar image
         avatar: /img/photo.svg
         # Whether show the rounded avatar image
@@ -256,18 +256,18 @@ widgets:
         # gravatar: youweics@163.com
         gravatar:
         # URL or path for the follow button
-        follow_link: https://github.com/terwer
+        follow_link: https://github.com/luommy
         # Links to be shown on the bottom of the profile widget
         social_links:
             Github:
                 icon: fab fa-github
-                url: https://github.com/terwer
+                url: https://github.com/luommy
             Facebook:
                 icon: fab fa-facebook
-                url: https://facebook.com/tangyouwei
+                url: https://facebook.com/luommy
             Twitter:
                 icon: fab fa-twitter
-                url: https://twitter.com/youweitang
+                url: https://twitter.com/luommy
             RSS:
                 icon: fas fa-rss
                 url: /

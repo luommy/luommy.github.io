@@ -7,6 +7,6 @@ date: 2023-08-29 23:31:04
 <ul>
     <li>博客名：林庭晚阖</li>
 	<li>简介：寻找未知的技术拼图</li>
-	<li>图片：https://terwer.space/logo.svg</li>
-	<li>链接：https://terwer.space</li>
+	<li>图片：https://github.com/luommy/myblogimg/tree/img/myblog</li>
+	<li>链接：https://luommy.github.io/</li>
 </ul>

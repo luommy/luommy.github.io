@@ -1,6 +1,6 @@
 ---
 title: about
-date: 2023-03-26 23:30:36
+date: 2023-08-26 23:30:36
 ---
 
-about mej
+about me
