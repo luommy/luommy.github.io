@@ -249,7 +249,7 @@ widgets:
         # location: 深圳
         location: San Francisco
         # URL or path to the avatar image
-        avatar: /img/photo.svg
+        avatar: /img/silverwolf.svg
         # Whether show the rounded avatar image
         avatar_rounded: true
         # Email address for the Gravatar
