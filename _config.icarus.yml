@@ -177,16 +177,16 @@ search:
 comment:
     type: waline
     server_url: 'https://myblog-vercel.vercel.app/'
-    # locale:                                               # 可选填
-    # server_url: 'https://waline.terwergreen.com/'
-    # lang: zh-CN                                           # 可选填
-    # wordLimitL: 0                                         # 可选填
-    placeholder: 'I'm looking forward to your comment...'        
+    placeholder: "I'm looking forward to your comment..."        
     dark: auto                                              
     copyright: true                                         
     page_size: 10    
     image_uploader: false
     login: 'disable'
+    # locale:                                               # 可选填
+    # server_url: 'https://waline.terwergreen.com/'
+    # lang: zh-CN                                           # 可选填
+    # wordLimitL: 0                                         # 可选填
 
 # Donate plugin configurations
 # https://ppoffice.github.io/hexo-theme-icarus/categories/Plugins/Donation/
