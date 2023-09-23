@@ -176,7 +176,15 @@ search:
 # https://ppoffice.github.io/hexo-theme-icarus/categories/Plugins/Comment/
 comment:
     type: waline
-    server_url: 'https://waline.terwergreen.com/'
+    server_url: 'https://myblog-vercel.vercel.app/'
+    locale:                                       # 可选填
+        placeholder: 'I'm looking forward to your comment...'
+    # server_url: 'https://waline.terwergreen.com/'
+    # lang: zh-CN                                 # 可选填
+    # wordLimitL: 0                               # 可选填
+    dark: auto                                    # 可选填
+    copyright: true                               # 可选填
+    page_size: 10    
     image_uploader: false
     login: 'disable'
 
