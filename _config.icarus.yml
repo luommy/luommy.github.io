@@ -177,8 +177,9 @@ search:
 comment:
     type: waline
     server_url: 'https://myblog-vercel.vercel.app/'
-    locale:                                       # 可选填
-        placeholder: 'I'm looking forward to your comment...'
+    # locale:                                       # 可选填
+    placeholder: 'I'm looking forward to your comment...'
+        
     # server_url: 'https://waline.terwergreen.com/'
     # lang: zh-CN                                 # 可选填
     # wordLimitL: 0                               # 可选填
