@@ -29,12 +29,13 @@ toc: true
 
     package ${GO_PACKAGE_NAME}
 
+    // 我不习惯加这个
     func main() {
 
     }
     ```
 
-​![image](http://127.0.0.1:55135/assets/image-20230922001754-vgrw09w.png)
+​​![image](http://127.0.0.1:55135/assets/image-20230925165724-q8ryiuj.png)​​
 
 ‍
 
@@ -52,7 +53,7 @@ toc: true
 
 路径：File -> Settings -> File and Code Templates
 
-​![image](http://127.0.0.1:55135/assets/image-20230921234433-29gnid1.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309251659475.png)​
 
 添加如下信息：
 
@@ -74,7 +75,7 @@ func main() {
 
 **Live Templates**
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309251650170.png)
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309251659442.png)
 
 ## go templates 内置函数
 
@@ -127,13 +128,13 @@ func main() {
 
 习惯设置Alt+T 一键互译
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309251650861.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309251659306.png)​
 
 ## 注释插件：Goanno
 
 插件市场安装，通过tools进行配置——Goanno Setting
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309251650233.png)​​​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309251659086.png)​​​
 
 ### 方法、接口、结构体注释模板配置
 
