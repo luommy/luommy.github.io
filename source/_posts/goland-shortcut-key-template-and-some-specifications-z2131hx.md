@@ -9,6 +9,7 @@ permalink: /post/goland-shortcut-key-template-and-some-specifications-z2131hx.ht
 comments: true
 toc: true
 ---
+
 # Goland 快捷键、模板与一些规范
 
 题记： 快捷键的使用可以大大提高效率，良好的注释对项目后续的开发维护工作也是十分必要。本文档旨在明确项目开发过程中go代码的注释规范，并提供基于goland的注释模板设置指导。便于开发人员快速配置环境，高效、合规开展工作。
@@ -20,18 +21,20 @@ toc: true
 1. Go文件采用goland自带的go文件和代码模板
 
     ```
-    package ${GO_PACKAGE_NAME}
     /**
      * @Description //TODO
      * @Author luommy
      * @Date ${DATE} ${TIME}
      **/
+
+    package ${GO_PACKAGE_NAME}
+
     func main() {
 
     }
     ```
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309220033668.png)
+​![image](http://127.0.0.1:55135/assets/image-20230922001754-vgrw09w.png)
 
 ‍
 
@@ -43,13 +46,13 @@ toc: true
 
 ​自定义快捷键：`CTRL+J`​
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309220033904.png)​
+​![image](http://127.0.0.1:55135/assets/image-20230815101928-bc1rjz0.png)​
 
 ### 添加新建类的注释模板
 
 路径：File -> Settings -> File and Code Templates
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309220034132.png)​
+​![image](http://127.0.0.1:55135/assets/image-20230921234433-29gnid1.png)​
 
 添加如下信息：
 
@@ -71,7 +74,7 @@ func main() {
 
 **Live Templates**
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309220034109.png)
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309251650170.png)
 
 ## go templates 内置函数
 
@@ -81,7 +84,7 @@ func main() {
 
 ### 在模板变量中使用的预定义函数
 
-有很多都用不到的
+有很多都用不到的，感觉并不好用，没啥能用到的场景
 
 |Item|Description|
 | --------| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -114,25 +117,27 @@ func main() {
 
 ‍
 
-​
+‍
 
 ## 中英互译插件
+
+目前觉得挺好用的
 
 支持自定义快捷键：setting-keymap-plugins
 
 习惯设置Alt+T 一键互译
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309220034317.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309251650861.png)​
 
 ## 注释插件：Goanno
 
 插件市场安装，通过tools进行配置——Goanno Setting
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309220034959.png)​​​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309251650233.png)​​​
 
 ### 方法、接口、结构体注释模板配置
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309220034472.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309251650305.png)​
 
 配置内容如下：
 
@@ -175,4 +180,12 @@ Struct Field  不做配置
 
 ![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202309220034329.png)​
 
-‍
+## AI 插件 CodeGeeX 
+
+[官网](https://codegeex.cn/)
+
+几个重点的功能：
+
+1. 多语言代码之间翻译，无缝转换
+2. 注释生成代码/自动补全代码
+3. AI问答
