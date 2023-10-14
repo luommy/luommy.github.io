@@ -1,8 +1,8 @@
 ---
-title: 训练
+title: 训练历程
 date: '2023-09-22 15:00:41'
 updated: '2023-10-14 17:26:46'
-excerpt: 我的数据结构与算法巩固
+excerpt: 我的数据结构与算法巩固~~~
 categories:
   - 数据结构与算法
 permalink: /post/algorithm-system-1wyqpm.html
@@ -10,7 +10,7 @@ comments: true
 toc: true
 ---
 
-# 训练
+# 我的数据结构和算法知识体系
 
 我的算法体系由hello+代码随想录培养.... 相互补充
 
