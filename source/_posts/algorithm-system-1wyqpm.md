@@ -4,14 +4,13 @@ date: '2023-09-22 15:00:41'
 updated: '2023-10-14 17:26:46'
 excerpt: 我的数据结构与算法巩固
 categories:
-  - 算法加练/体系
   - 数据结构与算法
 permalink: /post/algorithm-system-1wyqpm.html
 comments: true
 toc: true
 ---
 
-# 
+# 数据结构与算法培养计划
 
 我的算法体系由hello+代码随想录培养.... 相互补充
 
