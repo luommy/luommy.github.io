@@ -10,7 +10,7 @@ comments: true
 toc: true
 ---
 
-# 
+# 训练
 
 我的算法体系由hello+代码随想录培养.... 相互补充
 
