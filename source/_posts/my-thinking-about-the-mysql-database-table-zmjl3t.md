@@ -1,5 +1,5 @@
 ---
-title: 我关于MySQL分库分表的思考
+title: 微服务下分库分表的思考
 date: '2023-10-16 14:22:08'
 updated: '2023-10-16 17:45:20'
 excerpt: 比较成体系关于分库分表的思考，持续更新....
@@ -35,11 +35,11 @@ toc: true
 
 **分库**：就是一个数据库分成多个数据库，部署到不同机器。单体架构下就没有分库分表，比较单一，SOA到微服务的发展中演进的
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746142.jpg)​
+​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750219.jpg)​
 
 **分表**：就是一个数据库表分成多个表。
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746919.jpg)​
+​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750007.jpg)​
 
 # 2.为什么需要分库分表呢？
 
@@ -65,7 +65,7 @@ Mysql单表存储数据量瓶颈推演（2000W左右）
 
 InnoDB存储引擎最小储存单元是页，一页大小就是16k。B+树叶子存的是数据，内部节点存的是键值+指针。索引组织表通过非叶子节点的二分查找法以及指针确定数据在哪个页中，进而再去数据页中找到需要的数据，B+树结构图如下：
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746605.jpg)​
+​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750719.jpg)​
 
 假设B+树的高度为2的话，即有一个根结点和若干个叶子结点。这棵B+树的存放总记录数为=根结点指针数*单个叶子节点记录行数。
 
@@ -84,9 +84,9 @@ InnoDB存储引擎最小储存单元是页，一页大小就是16k。B+树叶子
 >
 > 16K的页内结构
 >
-> ​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746314.png)​
+> ​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750403.png)​
 >
-> ​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746332.png)​
+> ​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750589.png)​
 >
 > 这种角度：
 >
@@ -115,11 +115,11 @@ InnoDB存储引擎最小储存单元是页，一页大小就是16k。B+树叶子
 > * 假设 B+ 树是两层，那就是 z = 2， Total = （1280 ^1 ）*15 = 19200
 > * 假设 B+ 树是三层，那就是 z = 3， Total = （1280 ^2） *15 = 24576000 （约 2.45kw）
 >
-> ​![8b14ff08d4e0ace39a16f474f393a8f](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746201.jpg)​
+> ​![8b14ff08d4e0ace39a16f474f393a8f](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750687.jpg)​
 >
 > 2.磁盘块角度（上述即是）：
 >
-> ​![de4f110029fd2c2442e392b10bbe771](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746197.jpg)​
+> ​![de4f110029fd2c2442e392b10bbe771](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750307.jpg)​
 
 ‍
 
@@ -129,19 +129,19 @@ InnoDB存储引擎最小储存单元是页，一页大小就是16k。B+树叶子
 
 3.1 垂直拆分
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746169.jpg)​
+​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750530.jpg)​
 
 #### **3.1.1 垂直分库**
 
 在业务发展初期，业务功能模块比较少，为了快速上线和迭代，往往采用单个数据库来保存数据。数据库架构如下：
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746907.jpg)​
+​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750216.jpg)​
 
 但是随着业务蒸蒸日上，系统功能逐渐完善。这时候，可以按照系统中的不同业务进行拆分，比如拆分成**用户库、订单库、积分库、商品库**，把它们部署在不同的数据库服务器，这就是**垂直分库**。
 
 垂直分库，将原来一个单数据库的压力分担到不同的数据库，可以很好应对高并发场景。数据库垂直拆分后的架构如下：
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746810.jpg)​
+​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750440.jpg)​
 
 #### **3.1.2 垂直分表**
 
@@ -149,7 +149,7 @@ InnoDB存储引擎最小储存单元是页，一页大小就是16k。B+树叶子
 
 比如一张用户表，它包含`user_id、user_name、mobile_no、age、email、nickname、address、user_desc`​，如果`email、address、user_desc`​等字段不常用，我们可以把它拆分到另外一张表，命名为用户详细信息表。这就是垂直分表：
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746653.jpg)​
+​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750141.jpg)​
 
 3.2 水平拆分
 
@@ -159,7 +159,7 @@ InnoDB存储引擎最小储存单元是页，一页大小就是16k。B+树叶子
 
 用户库的水平拆分架构如下：
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746331.jpg)​
+​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750863.jpg)​
 
 #### **3.2.2 水平分表**
 
@@ -167,7 +167,7 @@ InnoDB存储引擎最小储存单元是页，一页大小就是16k。B+树叶子
 
 一张订单表，按`时间range`​拆分如下：
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746017.jpg)​
+​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750748.jpg)​
 
 3.3. 水平分库分表策略
 
@@ -181,7 +181,7 @@ InnoDB存储引擎最小储存单元是页，一页大小就是16k。B+树叶子
 
 range，即范围策略划分表。比如我们可以将**表的主键**，按照从`0~1000万`​的划分为一个表，`1000~2000万`​划分到另外一个表，以此类推。如下图：
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746706.jpg)​
+​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750584.jpg)​
 
 <u>当然，有时候我们也可以按</u>​<u>**时间范围**</u><u>来划分，如不同年月的订单放到不同的表，它也是一种range的划分策略。</u>
 
@@ -199,7 +199,7 @@ hash取模策略：指定的路由key（一般是user_id、订单id作为key）�
 
 比如原始订单表信息，我们把它分成4张分表：
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746448.jpg)​
+​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750347.jpg)​
 
 * 比如id=1，对4取模，就会得到1，就把它放到第1张表，即`t_order_0`​;
 * id=3，对4取模，就会得到3，就把它放到第3张表，即`t_order_2`​;
@@ -218,7 +218,7 @@ hash取模策略：指定的路由key（一般是user_id、订单id作为key）�
 
 比较简单的做法就是，在拆分库的时候，我们可以先用**range范围**方案，比如订单id在0~4000万的区间，划分为订单库1，id在4000万~8000万的数据，划分到订单库2,将来要扩容时，id在8000万~1.2亿的数据，划分到订单库3。然后订单库内，再用**hash取模**的策略，把不同订单划分到不同的表。
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746293.jpg)​
+​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750111.jpg)​
 
 # **4. 什么时候考虑分库分表？**
 
@@ -316,7 +316,7 @@ Twitter的snowflake算法解决了分布式系统生成全局ID的需求，生�
 * 5位datacenterId，5位workerId。10位的长度最多支持部署1024个节点
 * 最后12位是毫秒内的计数，12位的计数顺序号支持每个节点每毫秒产生4096个ID序列
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746041.png)​
+​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161750788.png)​
 
 **好处：**毫秒数在高位，生成的ID整体上按时间趋势递增；不依赖第三方系统，稳定性和效率较高，理论上QPS约为409.6w/s（1000*2^12），并且整个分布式系统内不会产生ID碰撞；可根据自身业务灵活分配bit位。
 
