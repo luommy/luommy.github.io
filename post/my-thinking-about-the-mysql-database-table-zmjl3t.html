@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>我关于MySQL分库分表的思考 - 林庭晚阖</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="林庭晚阖"><meta name="msapplication-TileImage" content="/img/kafka.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="林庭晚阖"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="比较成体系关于分库分表的思考，持续更新...."><meta property="og:type" content="blog"><meta property="og:title" content="我关于MySQL分库分表的思考"><meta property="og:url" content="https://luommy.github.io/post/my-thinking-about-the-mysql-database-table-zmjl3t.html"><meta property="og:site_name" content="林庭晚阖"><meta property="og:description" content="比较成体系关于分库分表的思考，持续更新...."><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746142.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746919.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746605.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746314.png"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746332.png"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746201.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746197.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746169.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746907.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746810.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746653.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746331.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746017.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746706.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746448.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746293.jpg"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746041.png"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746040.jpg"><meta property="article:published_time" content="2023-10-16T06:22:08.000Z"><meta property="article:modified_time" content="2023-10-16T09:45:20.000Z"><meta property="article:author" content="luommy"><meta property="article:tag" content="mysql"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746142.jpg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://luommy.github.io/post/my-thinking-about-the-mysql-database-table-zmjl3t.html"},"headline":"我关于MySQL分库分表的思考","image":["https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746142.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746919.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746605.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746314.png","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746332.png","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746201.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746197.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746169.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746907.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746810.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746653.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746331.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746017.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746706.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746448.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746293.jpg","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746041.png","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746040.jpg"],"datePublished":"2023-10-16T06:22:08.000Z","dateModified":"2023-10-16T09:45:20.000Z","author":{"@type":"Person","name":"luommy"},"publisher":{"@type":"Organization","name":"林庭晚阖","logo":{"@type":"ImageObject","url":"https://luommy.github.io/img/logo.svg"}},"description":"比较成体系关于分库分表的思考，持续更新...."}</script><link rel="canonical" href="https://luommy.github.io/post/my-thinking-about-the-mysql-database-table-zmjl3t.html"><link rel="icon" href="/img/kafka.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/vs.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><script>var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?ecf13ffee9f4083d9a74b337b541f90b";
+            var s = document.getElementsByTagName("script")[0];
+            s.parentNode.insertBefore(hm, s);
+        })();</script><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script>
+  <link rel="stylesheet" href="/custom/custom.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="林庭晚阖" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">首页</a><a class="navbar-item" href="/archives">文章</a><a class="navbar-item" href="/tags/timeline">心情</a><a class="navbar-item" href="/categories">分类</a><a class="navbar-item" href="/tags">标签</a><a class="navbar-item" href="/links.html">友链</a><a class="navbar-item" href="/guestbook.html">留言</a><a class="navbar-item" href="/about.html">关于</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="发邮件" href="mailto:jdonglecool@163.com"><i class="fab fa-regular fa-envelope"></i></a><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/luommy"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-8-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2023-10-16T06:22:08.000Z" title="10/16/2023, 6:22:08 AM">2023-10-16</time>发表</span><span class="level-item"><time dateTime="2023-10-16T09:45:20.000Z" title="10/16/2023, 9:45:20 AM">2023-10-16</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/MySQL/">MySQL</a></span><span class="level-item">36 分钟读完 (大约5451个字)</span></div></div><h1 class="title is-3 is-size-4-mobile">我关于MySQL分库分表的思考</h1><div class="content"><h1 id="我关于MySQL分库分表的思考"><a href="#我关于MySQL分库分表的思考" class="headerlink" title="我关于MySQL分库分表的思考"></a>我关于MySQL分库分表的思考</h1><blockquote>
+<p>分库分表的这个名词再常见不过了，一开始的理解不够，随着对mysql理解的加深。</p>
+<p>关于这个问题目前我的整体前置思路是：Mysql的瓶颈在哪里——InnoDB存储引擎——MySQL单表存储的瓶颈以及瓶颈推演与测试——分库分表，内容不一定绝对，但是思路是完整、有迹可循的。</p>
+<p>关联文章：Mysql单表存储数据量瓶颈推演（2000W左右）</p>
+</blockquote>
+<p><strong>目录</strong></p>
+<ol>
+<li>什么是分库分表？</li>
+<li>为什么需要分库分表？</li>
+<li>如何分库分表？</li>
+<li>什么时候开始考虑分库分表？</li>
+<li>分库分表会导致哪些问题？如何解决？</li>
+<li>分库分表中间件？</li>
+</ol>
+<hr>
+<h1 id="1-什么是分库分表"><a href="#1-什么是分库分表" class="headerlink" title="1. 什么是分库分表"></a><strong>1. 什么是分库分表</strong></h1><p><strong>分库</strong>：就是一个数据库分成多个数据库，部署到不同机器。单体架构下就没有分库分表，比较单一，SOA到微服务的发展中演进的</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746142.jpg" alt="图片">​</p>
+<p><strong>分表</strong>：就是一个数据库表分成多个表。</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746919.jpg" alt="图片">​</p>
+<h1 id="2-为什么需要分库分表呢？"><a href="#2-为什么需要分库分表呢？" class="headerlink" title="2.为什么需要分库分表呢？"></a>2.为什么需要分库分表呢？</h1><p>如果业务量剧增，数据库可能会出现性能瓶颈，这时候我们就需要考虑拆分数据库。从这几方面来看：</p>
+<ul>
+<li><strong>磁盘存储（很容易想到，这边便硬件层面的因素）</strong></li>
+</ul>
+<p>业务量剧增，MySQL单机磁盘容量会撑爆，拆成多个数据库，磁盘使用率大大降低。</p>
+<ul>
+<li><strong>并发连接支撑（这个是mysql本身的瓶颈）</strong></li>
+</ul>
+<p>我们知道数据库连接是有限的。在高并发的场景下，大量请求访问数据库，MySQL单机是扛不住的！当前非常火的<strong>微服务架构</strong>出现，就是为了应对高并发。它把<strong>订单、用户、商品</strong>等不同模块，拆分成多个应用，并且把单个数据库也拆分成多个不同功能模块的数据库（<strong>订单库、用户库、商品库</strong>），以分担读写压力。</p>
+<p><em><strong>为什么需要分表？</strong></em></p>
+<p>数据量太大的话，SQL的查询就会变慢。如果一个查询SQL<strong>没命中索引</strong>，千百万数据量的表可能会拖垮这个数据库。</p>
+<p>即使SQL命中了索引，如果表的数据量<strong>超过一千万</strong>的话，<strong>查询也是会明显变慢的</strong>。这是因为索引一般是B+树结构，数据千万级别的话，B+树的高度会增高，查询就变慢啦。</p>
+<p>Mysql单表存储数据量瓶颈推演（2000W左右）</p>
+<p><strong>MySQL的B+树的高度怎么计算的呢？</strong> </p>
+<p>InnoDB存储引擎最小储存单元是页，一页大小就是16k。B+树叶子存的是数据，内部节点存的是键值+指针。索引组织表通过非叶子节点的二分查找法以及指针确定数据在哪个页中，进而再去数据页中找到需要的数据，B+树结构图如下：</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746605.jpg" alt="图片">​</p>
+<p>假设B+树的高度为2的话，即有一个根结点和若干个叶子结点。这棵B+树的存放总记录数为&#x3D;根结点指针数*单个叶子节点记录行数。</p>
+<ul>
+<li>如果一行记录的数据大小为1k，那么单个叶子节点可以存的记录数  <code>=16k/1k =16</code>​</li>
+<li>非叶子节点内存放多少指针呢？我们假设主键ID为<strong>bigint类型，长度为8字节</strong>(<strong>面试官问你int类型，一个int就是32位，4字节</strong>)，而指针大小在InnoDB源码中设置为6字节，所以就是 <code>8+6=14 ​</code>​字节，<code>16k/14B =16*1024B/14B = 1170</code>​</li>
+</ul>
+<p>因此，一棵高度为2的B+树，能存放<code>1170 * 16=18720</code>​条这样的数据记录。</p>
+<p>同理一棵高度为<code>3</code>​的B+树，能存放<code>1170 *1170 *16 =21902400</code>​，大概可以存放两千万左右的记录。B+树高度一般为1-3层，如果B+到了4层，查询的时候会<strong>多查磁盘</strong>的次数，SQL就会变慢。</p>
+<p>因此单表数据量超过千万-&gt;就需要考虑分表啦。</p>
+<blockquote>
+<p>这个地方从两种角度分析：颗粒度不一样，层面也不一样</p>
+<p>1.页的细节角度</p>
+<p>16K的页内结构</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746314.png" alt="image">​</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746332.png" alt="image">​</p>
+<p>这种角度：</p>
+<ul>
+<li>非叶子节点内指向其他页的数量为 x</li>
+<li>叶子节点内能容纳的数据行数为 y</li>
+<li>B+ 数的层数为 z</li>
+</ul>
+<p>页的结构，索引也也不例外，都会有 File Header (38 byte)、Page Header (56 Byte)、Infimum + Supermum（26 byte）、File Trailer（8byte）, 再加上页目录，大概 1k 左右。</p>
+<p>我们就当做它就是 1K, 那整个页的大小是 16K, 剩下 15k 用于存数据，在索引页中主要记录的是主键与页号，主键我们假设是 Bigint (8 byte), 而页号也是固定的（4Byte）, 那么索引页中的一条数据的大小&#x3D;8+4&#x3D;12byte。15K&#x3D;15*1024B</p>
+<p>所以 <strong>非叶子节点内指向其他页的数量x ​</strong>&#x3D;15*1024&#x2F;12≈1280 行。</p>
+<p>叶子节点和非叶子节点的结构是一样的，同理，能放数据的空间也是 15k。</p>
+<p>但是叶子节点中存放的是真正的行数据，这个影响的因素就会多很多，比如，字段的类型，字段的数量。每行数据占用空间越大，页中所放的行数量就会越少。</p>
+<p>这边我们暂时按一条行数据 1k 来算，那一页就能存下 15 条，Y &#x3D; 15*1024&#x2F;1000 ≈15。</p>
+<p>算到这边了，是不是心里已经有谱了啊。</p>
+<p>Total 总数据行数</p>
+<p>根据上述的公式，Total &#x3D;x^(z-1) *y，已知 x&#x3D;1280，y&#x3D;15：</p>
+<ul>
+<li>假设 B+ 树是两层，那就是 z &#x3D; 2， Total &#x3D; （1280 ^1 ）*15 &#x3D; 19200</li>
+<li>假设 B+ 树是三层，那就是 z &#x3D; 3， Total &#x3D; （1280 ^2） *15 &#x3D; 24576000 （约 2.45kw）</li>
+</ul>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746201.jpg" alt="8b14ff08d4e0ace39a16f474f393a8f">​</p>
+<p>2.磁盘块角度（上述即是）：</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746197.jpg" alt="de4f110029fd2c2442e392b10bbe771">​</p>
+</blockquote>
+<p>‍</p>
+<h1 id="3-如何分库分表"><a href="#3-如何分库分表" class="headerlink" title="3. 如何分库分表"></a><strong>3. 如何分库分表</strong></h1><blockquote>
+<p>水平即行，垂直即列，一横一竖，横即拆行，竖即拆列</p>
+</blockquote>
+<p>3.1 垂直拆分</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746169.jpg" alt="图片">​</p>
+<h4 id="3-1-1-垂直分库"><a href="#3-1-1-垂直分库" class="headerlink" title="3.1.1 垂直分库"></a><strong>3.1.1 垂直分库</strong></h4><p>在业务发展初期，业务功能模块比较少，为了快速上线和迭代，往往采用单个数据库来保存数据。数据库架构如下：</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746907.jpg" alt="图片">​</p>
+<p>但是随着业务蒸蒸日上，系统功能逐渐完善。这时候，可以按照系统中的不同业务进行拆分，比如拆分成<strong>用户库、订单库、积分库、商品库</strong>，把它们部署在不同的数据库服务器，这就是<strong>垂直分库</strong>。</p>
+<p>垂直分库，将原来一个单数据库的压力分担到不同的数据库，可以很好应对高并发场景。数据库垂直拆分后的架构如下：</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746810.jpg" alt="图片">​</p>
+<h4 id="3-1-2-垂直分表"><a href="#3-1-2-垂直分表" class="headerlink" title="3.1.2 垂直分表"></a><strong>3.1.2 垂直分表</strong></h4><p>如果一个单表包含了几十列甚至上百列，管理起来很混乱，每次都<code>select *</code>​的话，还占用IO资源。这时候，我们可以将一些<strong>不常用的、数据较大或者长度较长的列</strong>拆分到另外一张表。</p>
+<p>比如一张用户表，它包含<code>user_id、user_name、mobile_no、age、email、nickname、address、user_desc</code>​，如果<code>email、address、user_desc</code>​等字段不常用，我们可以把它拆分到另外一张表，命名为用户详细信息表。这就是垂直分表：</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746653.jpg" alt="图片">​</p>
+<p>3.2 水平拆分</p>
+<p><strong>3.2.1 水平分库</strong></p>
+<p>水平分库是指，将表的数据量切分到不同的数据库服务器上，每个服务器具有相同的库和表，只是表中的数据集合不一样。它可以有效的缓解单机单库的性能瓶颈和压力。</p>
+<p>用户库的水平拆分架构如下：</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746331.jpg" alt="图片">​</p>
+<h4 id="3-2-2-水平分表"><a href="#3-2-2-水平分表" class="headerlink" title="3.2.2 水平分表"></a><strong>3.2.2 水平分表</strong></h4><p>如果一个表的数据量太大，可以按照某种规则（如<code>hash取模、range</code>​），把数据切分到多张表去。</p>
+<p>一张订单表，按<code>时间range</code>​拆分如下：</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746017.jpg" alt="图片">​</p>
+<p>3.3. 水平分库分表策略</p>
+<p>分库分表策略一般有几种，使用与不同的场景：</p>
+<ul>
+<li>range范围</li>
+<li>hash取模</li>
+<li>range+hash取模混合</li>
+</ul>
+<h4 id="3-3-1-range范围"><a href="#3-3-1-range范围" class="headerlink" title="3.3.1 range范围"></a><strong>3.3.1 range范围</strong></h4><p>range，即范围策略划分表。比如我们可以将<strong>表的主键</strong>，按照从<code>0~1000万</code>​的划分为一个表，<code>1000~2000万</code>​划分到另外一个表，以此类推。如下图：</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746706.jpg" alt="图片">​</p>
+<p><u>当然，有时候我们也可以按</u>​<u><strong>时间范围</strong></u><u>来划分，如不同年月的订单放到不同的表，它也是一种range的划分策略。</u></p>
+<p><strong>这种方案的优点：</strong></p>
+<ul>
+<li>这种方案有利于扩容，不需要数据迁移。假设数据量增加到5千万，我们只需要水平增加一张表就好啦，之前<code>0~4000万</code>​的数据，不需要迁移。</li>
+</ul>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>这种方案会有热点问题，因为订单id是一直在增大的，也就是说最近一段时间都是汇聚在一张表里面的。比如最近一个月的订单都在<code>1000万~2000</code>​万之间，<u><em>平时用户一般都查最近一个月的订单比较多</em></u>，请求都打到<code>order_1</code>​表啦，这就导致表的<strong>数据热点</strong>问题。</li>
+</ul>
+<h4 id="3-3-2-hash取模"><a href="#3-3-2-hash取模" class="headerlink" title="3.3.2 hash取模"></a><strong>3.3.2 hash取模</strong></h4><p>hash取模策略：指定的路由key（一般是user_id、订单id作为key）对分表总数进行取模，把数据分散到各个表中。</p>
+<p>比如原始订单表信息，我们把它分成4张分表：</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746448.jpg" alt="图片">​</p>
+<ul>
+<li>比如id&#x3D;1，对4取模，就会得到1，就把它放到第1张表，即<code>t_order_0</code>​;</li>
+<li>id&#x3D;3，对4取模，就会得到3，就把它放到第3张表，即<code>t_order_2</code>​;</li>
+</ul>
+<p><strong>这种方案的优点：</strong></p>
+<ul>
+<li>hash取模的方式，不会存在明显的热点集中问题。</li>
+</ul>
+<p><strong>缺点：</strong></p>
+<ul>
+<li>如果一开始按照hash取模分成4个表了，未来某个时候，表数据量又到瓶颈了，需要扩容，这就比较棘手了。比如你从4张表，又扩容成<code>8</code>​张表，那之前<code>id=5</code>​的数据是在（<code>5%4=1</code>​，即第一张表），现在应该放到（<code>5%8=5</code>​，即第<code>5</code>​张表），也就是说<strong>历史数据要做迁移了</strong>。</li>
+</ul>
+<h4 id="3-3-3-range-hash取模混合"><a href="#3-3-3-range-hash取模混合" class="headerlink" title="3.3.3 range+hash取模混合"></a><strong>3.3.3 range+hash取模混合</strong></h4><p>既然range存在热点数据问题，hash取模扩容迁移数据比较困难，我们可以综合两种方案一起嘛，取之之长，弃之之短。</p>
+<p>比较简单的做法就是，在拆分库的时候，我们可以先用<strong>range范围</strong>方案，比如订单id在0<del>4000万的区间，划分为订单库1，id在4000万</del>8000万的数据，划分到订单库2,将来要扩容时，id在8000万~1.2亿的数据，划分到订单库3。然后订单库内，再用<strong>hash取模</strong>的策略，把不同订单划分到不同的表。</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746293.jpg" alt="图片">​</p>
+<h1 id="4-什么时候考虑分库分表？"><a href="#4-什么时候考虑分库分表？" class="headerlink" title="4. 什么时候考虑分库分表？"></a><strong>4. 什么时候考虑分库分表？</strong></h1><p>前提：能不能切分就不要分，分了会极大的导致系统的复杂性。避免”过度设计”和”过早优化”。</p>
+<p>在分库分表之前，不要为分而分，先尽力去做力所能及的事情，例如：升级硬件、升级网络、读写分离、索引优化等等。当数据量达到单表的瓶颈时候，再考虑分库分表。</p>
+<p>4.1 什么时候分表？</p>
+<p>如果你的系统处于快速发展时期，如果每天的订单流水都新增几十万，并且，订单表的查询效率明变慢时，就需要规划分库分表了。一般B+树索引高度是2~3层最佳，如果数据量千万级别，可能高度就变4层了，数据量就会明显变慢了。不过业界流传，一般500万数据就要<strong>考虑分表</strong>了，属于提前考虑，留好空间。</p>
+<p>4.2 什么时候分库</p>
+<p>这一点我的理解是看业务量，微服务架构下，微服务特别多，或者很多重要的业务要维护高并发高可用的要求，就要分库，比如说重点的业务单体抽取出来单独分库。</p>
+<p>业务发展很快，还是多个服务共享一个单体数据库，数据库成为了性能瓶颈，就需要考虑分库了。比如订单、用户等，都可以抽取出来，新搞个应用（其实就是微服务思想），并且拆分数据库（订单库、用户库）。</p>
+<p>综合来讲，考虑分库分表的无非以下方面：</p>
+<p>① 数据量快速增长，当业务中数据量急速增长时</p>
+<p>② 维护困难时：比如，备份时较为困难，<strong>单表太大，备份时需要大量的磁盘IO和网络IO；对一个很大的表进行DDL修改时</strong>，MySQL会锁住全表，这个时间会很长，这段时间业务不能访问此表，影响很大<strong>。</strong>如果使用pt-online-schema-change，使用过程中会创建触发器和影子表，也需要很长的时间。在此操作过程中，都算为风险时间。将数据表拆分，总量减少，有助于降低这个风险；<strong>经常访问与更新</strong>，就更有可能出现锁等待，将数据切分，用空间换时间，变相降低访问压力。</p>
+<p>③ 业务需求：<strong>需要对某些字段垂直拆分，本质上还是因用户增多导致的业务特点发生了变化</strong></p>
+<p>举个例子，假如项目一开始设计的用户表如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">id                   bigint             #用户的ID</span><br><span class="line">name                 varchar            #用户的名字</span><br><span class="line">last_login_time      datetime           #最近登录时间</span><br><span class="line">personal_info        text               #私人信息</span><br><span class="line">.....                                   #其他信息字段</span><br></pre></td></tr></table></figure>
+
+<p>在项目初始阶段，这种设计是满足简单的业务需求的，也方便快速迭代开发。而当<strong>业务快速发展时，用户量从10w激增到10亿，用户非常的活跃</strong>，每次登录会更新 last_login_name 字段，使得 user 表被不断update，压力很大。</p>
+<p>而其他字段：id, name, personal_info 是不变的或很少更新的，此时在业务角度，就要将 last_login_time 拆分出去，新建一个 user_time 表。</p>
+<p>personal_info 属性是更新和查询频率较低的，并且text字段占据了太多的空间。这时候，就要对此垂直拆分出 user_ext 表了</p>
+<p>④ 安全性角度：鸡蛋不要放在一个篮子里。在业务层面上垂直切分，将不相关的业务的数据库分隔，因为每个业务的数据量、访问量都不同，不能因为一个业务把数据库搞挂而牵连到其他业务。利用水平切分，当一个数据库出现问题时，不会影响到100%的用户，每个库只承担业务的一部分数据，这样整体的可用性就能提高。</p>
+<h1 id="5-分库分表会导致哪些问题"><a href="#5-分库分表会导致哪些问题" class="headerlink" title="5. 分库分表会导致哪些问题"></a><strong>5. 分库分表会导致哪些问题</strong></h1><p><strong>分库分表之后，也会存在一些问题：</strong></p>
+<ul>
+<li>事务问题</li>
+<li>跨库关联</li>
+<li>排序问题</li>
+<li>分页问题</li>
+<li>分布式ID</li>
+<li>数据迁移、扩容问题</li>
+</ul>
+<p>5.1 事务问题</p>
+<p>分库分表后，假设两个表在不同的数据库，那么本地事务已经无效啦，需要使用分布式事务了。</p>
+<p>5.2 跨库关联</p>
+<p>跨节点Join的问题：解决这一问题可以分两次查询实现；</p>
+<p>冗余处理，反规范化设计：</p>
+<ol>
+<li><strong>增加冗余列(复制某一列的数据) 这一点是真的好用</strong></li>
+<li>增加派生列(计算总和，平均值..)</li>
+<li>表合并(把部分来自不同表的常用列合并成新表)</li>
+<li>表分割(把数据拆分为常用和不常用，行拆分是比如订单信息，列拆分比如账户信息&lt;额外的住址之类的并不常用，减少查询压力&gt;) 题中要求是商品信息冗余，所以应该采用&lt;增加冗余列&gt;的方法</li>
+</ol>
+<p>5.3 排序问题</p>
+<p>跨节点的count,order by,group by以及聚合函数等问题：可以分别在各个节点上得到结果后在应用程序端进行合并。</p>
+<p>5.4 分页问题</p>
+<ul>
+<li>方案1：在个节点查到对应结果后，在代码端汇聚再分页。</li>
+<li>方案2：把分页交给前端，前端传来pageSize和pageNo，在各个数据库节点都执行分页，然后汇聚总数量前端。这样缺点就是会造成空查，如果分页需要排序，也不好搞。</li>
+</ul>
+<p>5.5 分布式ID</p>
+<p>据库被切分后，不能再依赖数据库自身的主键生成机制啦，最简单可以考虑UUID，或者使用雪花算法生成分布式ID。</p>
+<p><strong>UUID:</strong></p>
+<p>UUID标准形式包含32个16进制数字，分为5段，形式为8-4-4-4-12的32个字符，例如：550e8400-e29b-41d4-a716-446655440000</p>
+<p>UUID是主键是最简单的方案，本地生成，性能高，没有网络耗时。但缺点也很明显，由于UUID非常长，会占用大量的存储空间；另外，作为<strong>主键建立索引和基于索引进行查询时都会存在性能问题</strong>，在InnoDB下，UUID的无序性会引起数据位置频繁变动，导致分页。</p>
+<p><strong>雪花算法：</strong></p>
+<p>Twitter的snowflake算法解决了分布式系统生成全局ID的需求，生成64位的Long型数字，组成部分：</p>
+<ul>
+<li>第一位未使用</li>
+<li>接下来41位是毫秒级时间戳，41位的长度可以表示69年的时间</li>
+<li>5位datacenterId，5位workerId。10位的长度最多支持部署1024个节点</li>
+<li>最后12位是毫秒内的计数，12位的计数顺序号支持每个节点每毫秒产生4096个ID序列</li>
+</ul>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746041.png" alt="图片">​</p>
+<p><strong>好处：</strong>毫秒数在高位，生成的ID整体上按时间趋势递增；不依赖第三方系统，稳定性和效率较高，理论上QPS约为409.6w&#x2F;s（1000*2^12），并且整个分布式系统内不会产生ID碰撞；可根据自身业务灵活分配bit位。</p>
+<p><strong>不足：</strong>强依赖机器时钟，如果时钟回拨，则可能导致生成ID重复。</p>
+<p>综上，结合数据库和snowflake的唯一ID方案，可以参考业界较为成熟的解法：<strong>Leaf——美团点评分布式ID生成系统，并考虑到了高可用、容灾、分布式下时钟等问题。</strong></p>
+<p><strong>数据迁移、扩容问题：</strong></p>
+<p>当业务高速发展，面临性能和存储的瓶颈时，才会考虑分片设计，此时就不可避免的需要考虑历史数据迁移的问题。一般做法是先读出历史数据，然后按指定的分片规则再将数据写入到各个分片节点中。</p>
+<p>此外还需要根据当前的数据量和QPS，以及业务发展的速度，进行容量规划，推算出大概需要多少分片（一般建议单个分片上的单表数据量不超过1000W）。</p>
+<p>如果采用数值范围分片，只需要添加节点就可以进行扩容了，不需要对分片数据迁移。如果采用的是数值取模分片，则考虑后期的扩容问题就相对比较麻烦。</p>
+<h1 id="6-分库分表中间件"><a href="#6-分库分表中间件" class="headerlink" title="6. 分库分表中间件"></a><strong>6. 分库分表中间件</strong></h1><p><strong>目前流行的分库分表中间件比较多：</strong></p>
+<ul>
+<li>cobar</li>
+<li>Mycat</li>
+<li>Sharding-JDBC（当当）</li>
+<li>Atlas</li>
+<li>TDDL（淘宝）</li>
+<li>vitess（谷歌开发的数据库中间件）</li>
+</ul>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310161746040.jpg" alt="图片"></p>
+<p>​</p>
+<blockquote>
+<p>参考资料：如何分库分表！</p>
+</blockquote>
+<p>‍</p>
+</div><div class="article-licensing box"><div class="licensing-title"><p>我关于MySQL分库分表的思考</p><p><a href="https://luommy.github.io/post/my-thinking-about-the-mysql-database-table-zmjl3t.html">https://luommy.github.io/post/my-thinking-about-the-mysql-database-table-zmjl3t.html</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>作者</h6><p>luommy</p></div></div><div class="level-item is-narrow"><div><h6>发布于</h6><p>2023-10-16</p></div></div><div class="level-item is-narrow"><div><h6>更新于</h6><p>2023-10-16</p></div></div><div class="level-item is-narrow"><div><h6>许可协议</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/mysql/">mysql</a></div><!--!--></article></div><div class="card"><div class="card-content"><h3 class="menu-label has-text-centered">喜欢这篇文章？打赏一下作者吧</h3><div class="buttons is-centered"><a class="button donate" data-type="wechat"><span class="icon is-small"><i class="fab fa-weixin"></i></span><span>微信</span><span class="qrcode"><img src="/" alt="微信"></span></a><a class="button donate" data-type="alipay"><span class="icon is-small"><i class="fab fa-alipay"></i></span><span>支付宝</span><span class="qrcode"><img src="/" alt="支付宝"></span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="afdian"><span class="icon is-small"><i class="fas fa-charging-station"></i></span><span>爱发电</span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="buymeacoffee"><span class="icon is-small"><i class="fas fa-coffee"></i></span><span>送我杯咖啡</span></a></div></div></div><nav class="post-navigation mt-4 level is-mobile"><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/post/20231014-saturday-zh8hf1.html"><span class="level-item">命运齿轮</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div class="content" id="waline-thread"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@waline/client@2.6.3/dist/waline.css"><script src="https://cdn.jsdelivr.net/npm/@waline/client@2.6.3/dist/waline.js"></script><script>Waline.init({
+            el: '#waline-thread',
+            serverURL: "https://myblog-vercel.vercel.app/",
+            path: window.location.pathname,
+            lang: "zh-CN",
+            
+            emoji: ["https://cdn.jsdelivr.net/gh/walinejs/emojis/weibo"],
+            dark: "auto",
+            meta: ["nick","mail","link"],
+            requiredMeta: [],
+            login: "disable",
+            
+            pageSize: 10,
+            imageUploader: false,
+            highlighter: false,
+            texRenderer: false,
+            search: false,
+            pageview: false,
+            comment: false,
+            copyright: true,
+        });</script></div></div></div><div class="column column-left is-4-tablet is-4-desktop is-4-widescreen  order-1 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#我关于MySQL分库分表的思考"><span class="level-left"><span class="level-item">1</span><span class="level-item">我关于MySQL分库分表的思考</span></span></a></li><li><a class="level is-mobile" href="#1-什么是分库分表"><span class="level-left"><span class="level-item">2</span><span class="level-item">1. 什么是分库分表</span></span></a></li><li><a class="level is-mobile" href="#2-为什么需要分库分表呢？"><span class="level-left"><span class="level-item">3</span><span class="level-item">2.为什么需要分库分表呢？</span></span></a></li><li><a class="level is-mobile" href="#3-如何分库分表"><span class="level-left"><span class="level-item">4</span><span class="level-item">3. 如何分库分表</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#3-3-3-range-hash取模混合"><span class="level-left"><span class="level-item">4.1</span><span class="level-item">3.3.3 range+hash取模混合</span></span></a></li></ul></li><li><a class="level is-mobile" href="#4-什么时候考虑分库分表？"><span class="level-left"><span class="level-item">5</span><span class="level-item">4. 什么时候考虑分库分表？</span></span></a></li><li><a class="level is-mobile" href="#5-分库分表会导致哪些问题"><span class="level-left"><span class="level-item">6</span><span class="level-item">5. 分库分表会导致哪些问题</span></span></a></li><li><a class="level is-mobile" href="#6-分库分表中间件"><span class="level-left"><span class="level-item">7</span><span class="level-item">6. 分库分表中间件</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="tags"><div class="card-content"><div class="menu"><h3 class="menu-label">标签</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/tags/timeline/"><span class="tag">timeline</span><span class="tag">3</span></a></div><div class="control"><a class="tags has-addons" href="/tags/goland%E6%8A%80%E5%B7%A7/"><span class="tag">goland技巧</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Myblog/"><span class="tag">Myblog</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/mysql/"><span class="tag">mysql</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Nacos/"><span class="tag">Nacos</span><span class="tag">1</span></a></div></div></div></div></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-10-16T06:22:08.000Z">2023-10-16</time></p><p class="title"><a href="/post/my-thinking-about-the-mysql-database-table-zmjl3t.html">我关于MySQL分库分表的思考</a></p><p class="categories"><a href="/categories/MySQL/">MySQL</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-10-14T06:31:49.000Z">2023-10-14</time></p><p class="title"><a href="/post/20231014-saturday-zh8hf1.html">命运齿轮</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-10-12T08:08:10.000Z">2023-10-12</time></p><p class="title"><a href="/post/concorded-programming-multiple-corporate-printing-zpbnes.html">多个协程打印相关问题</a></p><p class="categories"><a href="/categories/%E7%AE%97%E6%B3%95%E5%8A%A0%E7%BB%83/">算法加练</a> / <a href="/categories/%E7%AE%97%E6%B3%95%E5%8A%A0%E7%BB%83/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-09-22T07:00:41.000Z">2023-09-22</time></p><p class="title"><a href="/post/algorithm-system-1wyqpm.html">训练历程</a></p><p class="categories"><a href="/categories/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/">数据结构与算法</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-09-21T16:21:13.000Z">2023-09-22</time></p><p class="title"><a href="/post/string-reverse-1jimhs.html">Reverse a String</a></p><p class="categories"><a href="/categories/%E7%AE%97%E6%B3%95%E5%8A%A0%E7%BB%83/">算法加练</a></p></div></article></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="林庭晚阖" height="28"></a><p class="is-size-7"><span>&copy; 2023 luommy</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="回到顶端" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "此网站使用Cookie来改善您的体验。",
+          dismiss: "知道了！",
+          allow: "允许使用Cookie",
+          deny: "拒绝",
+          link: "了解更多",
+          policy: "Cookie政策",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css"><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/contrib/auto-render.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/contrib/mhchem.min.js" defer></script><script>window.addEventListener("load", function() {
+            document.querySelectorAll('[role="article"] > .content').forEach(function(element) {
+                renderMathInElement(element);
+            });
+        });</script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script><!-- hexo injector body_end start -->
+  <script type="text/javascript" src="/custom/custom.js"></script>
+<!-- hexo injector body_end end --></body></html>
