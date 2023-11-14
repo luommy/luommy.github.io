@@ -4,12 +4,13 @@ date: '2023-09-20 15:39:51'
 updated: '2023-09-21 09:12:17'
 excerpt: Nacos配置与使用；......
 tags:
-  - Nacos
+  - nacos
 permalink: /post/nacos-configuration-and-use-zm1qbo.html
 comments: true
 toc: true
 ---
-# Nacos配置与使用
+
+# Nacos相关记录
 
 > Nacos1.X与2.X有差异，目前基本使用2.X版本，也是推荐的版本
 >
