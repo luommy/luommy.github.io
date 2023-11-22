@@ -7,13 +7,12 @@ excerpt: |-
   其实可以联想到业务中，或者现实中的流水线场景，有一组任务要做，这个任务要有甲乙丙三个组件（人）来做，每个（组件）人都要参与实现...
 categories:
   - 算法加练
-  - 并发编程
 permalink: /post/concorded-programming-multiple-corporate-printing-zpbnes.html
 comments: true
 toc: true
 ---
 
-# 并发编程：多个协程打印
+# 多个协程打印相关问题
 
 ​`创建三个goroutine，分别输出1 4 7, 2 5 8, 3 6 9, ...... 100， 保证顺序输出1到100`​
 
@@ -106,9 +105,9 @@ func main() {
 
 结果：
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310121711858.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202311221517190.png)​
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202310121711648.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202311221517938.png)​
 
 ‍
 
