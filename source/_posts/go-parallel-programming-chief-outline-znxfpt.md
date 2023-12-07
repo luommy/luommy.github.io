@@ -19,6 +19,8 @@ toc: true
 > 本专题参考以晁岳攀老师为主，以培养全面、系统的Go并发编程学习体系。
 >
 > 期间可能也会掺杂一些个人理解或者其他的参考资料进行补充和校正。
+>
+> 持续更新中······ 预计2024年初更新完
 
 ​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312071403985.png)​
 
