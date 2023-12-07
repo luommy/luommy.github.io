@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>Go并发编程 | 总纲 - 林庭晚阖</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="林庭晚阖"><meta name="msapplication-TileImage" content="/img/kafka.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="林庭晚阖"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="我的并发编程系列总纲"><meta property="og:type" content="blog"><meta property="og:title" content="Go并发编程 | 总纲"><meta property="og:url" content="https://luommy.github.io/post/go-parallel-programming-chief-outline-znxfpt.html"><meta property="og:site_name" content="林庭晚阖"><meta property="og:description" content="我的并发编程系列总纲"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312071403985.png"><meta property="article:published_time" content="2023-12-06T09:50:18.000Z"><meta property="article:modified_time" content="2023-12-07T06:02:37.000Z"><meta property="article:author" content="luommy"><meta property="article:tag" content="golang"><meta property="article:tag" content="并发编程"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312071403985.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://luommy.github.io/post/go-parallel-programming-chief-outline-znxfpt.html"},"headline":"Go并发编程 | 总纲","image":["https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312071403985.png"],"datePublished":"2023-12-06T09:50:18.000Z","dateModified":"2023-12-07T06:02:37.000Z","author":{"@type":"Person","name":"luommy"},"publisher":{"@type":"Organization","name":"林庭晚阖","logo":{"@type":"ImageObject","url":"https://luommy.github.io/img/logo.svg"}},"description":"我的并发编程系列总纲"}</script><link rel="canonical" href="https://luommy.github.io/post/go-parallel-programming-chief-outline-znxfpt.html"><link rel="icon" href="/img/kafka.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/vs.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><script>var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?ecf13ffee9f4083d9a74b337b541f90b";
+            var s = document.getElementsByTagName("script")[0];
+            s.parentNode.insertBefore(hm, s);
+        })();</script><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script>
+  <link rel="stylesheet" href="/custom/custom.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="林庭晚阖" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">首页</a><a class="navbar-item" href="/archives">文章</a><a class="navbar-item" href="/tags/timeline">心情</a><a class="navbar-item" href="/categories">分类</a><a class="navbar-item" href="/tags">标签</a><a class="navbar-item" href="/links.html">友链</a><a class="navbar-item" href="/guestbook.html">留言</a><a class="navbar-item" href="/about.html">关于</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="发邮件" href="mailto:jdonglecool@163.com"><i class="fab fa-regular fa-envelope"></i></a><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/luommy"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-8-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2023-12-06T09:50:18.000Z" title="12/6/2023, 9:50:18 AM">2023-12-06</time>发表</span><span class="level-item"><time dateTime="2023-12-07T06:02:37.000Z" title="12/7/2023, 6:02:37 AM">2023-12-07</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/Golang/">Golang</a><span> / </span><a class="link-muted" href="/categories/Golang/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></span><span class="level-item">6 分钟读完 (大约850个字)</span></div></div><h1 class="title is-3 is-size-4-mobile">Go并发编程 | 总纲</h1><div class="content"><h1 id="Go并发编程-总纲"><a href="#Go并发编程-总纲" class="headerlink" title="Go并发编程 | 总纲"></a>Go并发编程 | 总纲</h1><blockquote>
+<p>本专题参考以晁岳攀老师为主，以培养全面、系统的Go并发编程学习体系。</p>
+<p>期间可能也会掺杂一些个人理解或者其他的参考资料进行补充和校正。</p>
+</blockquote>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312071403985.png" alt="image">​</p>
+<h1 id="基本介绍"><a href="#基本介绍" class="headerlink" title="基本介绍"></a>基本介绍</h1><p><span style="font-weight: bold;" data-type="strong">基本并发原语</span>：Mutex、RWMutex、Waitgroup、Cond、Pool、Context 等标准库中的并发原语，这些都是传统的并发原语，在其它语言中可能也会有。一通百通</p>
+<p><span style="font-weight: bold;" data-type="strong">原子操作</span>：原子操作是其它并发原语的基础，学会了你就可以自己创造新的并发原语。</p>
+<p><span style="font-weight: bold;" data-type="strong">Channel</span>：Channel 类型是 Go 语言独特的类型，因为比较新，较难以掌握，掌握它的基本用法、处理场景和应用模式，避免踩坑。</p>
+<p><span style="font-weight: bold;" data-type="strong">扩展并发原语</span>：目前来看，Go 开发组不准备在标准库中扩充并发原语了，但是还有一些并发原语应用广泛，比如信号量、SingleFlight、循环栅栏、ErrGroup 等。掌握了它们，就可以在处理一些并发问题时，取得事半功倍的效果。</p>
+<p><span style="font-weight: bold;" data-type="strong">分布式并发原语</span>：分布式并发原语是应对大规模的应用程序中并发问题的并发类型。我主要会介绍使用 etcd 实现的一些分布式并发原语，比如 Leader 选举、分布式互斥锁、分布式读写锁、分布式队列等，在处理分布式场景的并发问题时，特别有用。这一部分结合了分布式的知识，将并发和分布式结合可能会受益匪浅。</p>
+<h1 id="目标"><a href="#目标" class="headerlink" title="目标"></a>目标</h1><p><u>学习主线层面，主要是四大步骤，包括</u>​<u>基础用法、实现原理、易错场景、知名项目中的 Bug</u><u>。每一个模块，我都会带着你按照这四个步骤来学习，目的就是带你熟知每一种并发原语的实现机制和适用场景</u></p>
+<p>实际上，针对同一种场景，也许存在很多并发原语都适用的情况，但是一定是有最合适的那一个。所以，你必须非常清楚每种并发原语的实现机制和适用场景，千万不要被网上的一些文章误导，万事皆用 Channel</p>
+<p>奔着精通的方向：</p>
+<p>深入学习下 Go 并发原语的源代码。你会发现很多独到的设计，比如Mutex 为了公平性考量的设计、sync.Map 为提升性能做的设计，以及很多并发原语的异常状况的处理方式。尤其是这些异常状况，常常是并发编程中程序 panic 的原因。</p>
+<p>没有做过大型并发项目：可能不理解并发原语的重要性。——&gt;参看知名项目中犯过的错，站在巨人的肩膀上分析总结</p>
+<p>怎么算并发编程学的好，精通了？</p>
+<p><span style="font-weight: bold;" data-type="strong">晁岳攀老师给出的建议是：自己创造并发原语库和实现机制以及适用场景。</span> </p>
+<p>‍</p>
+</div><div class="article-licensing box"><div class="licensing-title"><p>Go并发编程 | 总纲</p><p><a href="https://luommy.github.io/post/go-parallel-programming-chief-outline-znxfpt.html">https://luommy.github.io/post/go-parallel-programming-chief-outline-znxfpt.html</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>作者</h6><p>luommy</p></div></div><div class="level-item is-narrow"><div><h6>发布于</h6><p>2023-12-06</p></div></div><div class="level-item is-narrow"><div><h6>更新于</h6><p>2023-12-07</p></div></div><div class="level-item is-narrow"><div><h6>许可协议</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/golang/">golang</a><a class="link-muted mr-2" rel="tag" href="/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></div><!--!--></article></div><div class="card"><div class="card-content"><h3 class="menu-label has-text-centered">喜欢这篇文章？打赏一下作者吧</h3><div class="buttons is-centered"><a class="button donate" data-type="wechat"><span class="icon is-small"><i class="fab fa-weixin"></i></span><span>微信</span><span class="qrcode"><img src="/" alt="微信"></span></a><a class="button donate" data-type="alipay"><span class="icon is-small"><i class="fab fa-alipay"></i></span><span>支付宝</span><span class="qrcode"><img src="/" alt="支付宝"></span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="afdian"><span class="icon is-small"><i class="fas fa-charging-station"></i></span><span>爱发电</span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="buymeacoffee"><span class="icon is-small"><i class="fas fa-coffee"></i></span><span>送我杯咖啡</span></a></div></div></div><nav class="post-navigation mt-4 level is-mobile"><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/post/re-learning-go-language-map-z1kmiya.html"><span class="level-item">重学Go语言 | Map</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div class="content" id="waline-thread"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@waline/client@2.6.3/dist/waline.css"><script src="https://cdn.jsdelivr.net/npm/@waline/client@2.6.3/dist/waline.js"></script><script>Waline.init({
+            el: '#waline-thread',
+            serverURL: "https://myblog-vercel.vercel.app/",
+            path: window.location.pathname,
+            lang: "zh-CN",
+            
+            emoji: ["https://cdn.jsdelivr.net/gh/walinejs/emojis/weibo"],
+            dark: "auto",
+            meta: ["nick","mail","link"],
+            requiredMeta: [],
+            login: "disable",
+            
+            pageSize: 10,
+            imageUploader: false,
+            highlighter: false,
+            texRenderer: false,
+            search: false,
+            pageview: false,
+            comment: false,
+            copyright: true,
+        });</script></div></div></div><div class="column column-left is-4-tablet is-4-desktop is-4-widescreen  order-1 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#Go并发编程-总纲"><span class="level-left"><span class="level-item">1</span><span class="level-item">Go并发编程 | 总纲</span></span></a></li><li><a class="level is-mobile" href="#基本介绍"><span class="level-left"><span class="level-item">2</span><span class="level-item">基本介绍</span></span></a></li><li><a class="level is-mobile" href="#目标"><span class="level-left"><span class="level-item">3</span><span class="level-item">目标</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="tags"><div class="card-content"><div class="menu"><h3 class="menu-label">标签</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/tags/timeline/"><span class="tag">timeline</span><span class="tag">4</span></a></div><div class="control"><a class="tags has-addons" href="/tags/golang/"><span class="tag">golang</span><span class="tag">2</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%A2%86%E5%9F%9F%E7%AE%97%E6%B3%95/"><span class="tag">领域算法</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E7%9F%A5%E8%AF%86%E4%BD%93%E7%B3%BB/"><span class="tag">知识体系</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/docker/"><span class="tag">docker</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/"><span class="tag">并发编程</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/goland%E6%8A%80%E5%B7%A7/"><span class="tag">goland技巧</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%AB%98%E5%B9%B6%E5%8F%91/"><span class="tag">高并发</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Myblog/"><span class="tag">Myblog</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/mysql/"><span class="tag">mysql</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/nacos/"><span class="tag">nacos</span><span class="tag">1</span></a></div></div></div></div></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-12-06T09:50:18.000Z">2023-12-06</time></p><p class="title"><a href="/post/go-parallel-programming-chief-outline-znxfpt.html">Go并发编程 | 总纲</a></p><p class="categories"><a href="/categories/Golang/">Golang</a> / <a href="/categories/Golang/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-12-05T07:35:49.000Z">2023-12-05</time></p><p class="title"><a href="/post/re-learning-go-language-map-z1kmiya.html">重学Go语言 | Map</a></p><p class="categories"><a href="/categories/Golang/">Golang</a> / <a href="/categories/Golang/%E9%87%8D%E5%AD%A6%E7%B3%BB%E5%88%97/">重学系列</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-12-02T08:23:00.000Z">2023-12-02</time></p><p class="title"><a href="/post/my-distributed-goals-ktyod.html">分布式晋级之路</a></p><p class="categories"><a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E3%80%81%E5%BE%AE%E6%9C%8D%E5%8A%A1%E3%80%81%E6%9E%B6%E6%9E%84/">分布式、微服务、架构</a> / <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E3%80%81%E5%BE%AE%E6%9C%8D%E5%8A%A1%E3%80%81%E6%9E%B6%E6%9E%84/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-12-01T14:42:25.000Z">2023-12-01</time></p><p class="title"><a href="/post/re-learning-go-language-how-to-use-context-in-go-ckuaa.html">重学Go语言 | 如何在Go中使用Context</a></p><p class="categories"><a href="/categories/Golang/">Golang</a> / <a href="/categories/Golang/%E9%87%8D%E5%AD%A6%E7%B3%BB%E5%88%97/">重学系列</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-11-23T03:36:57.000Z">2023-11-23</time></p><p class="title"><a href="/post/global-understanding-the-evolution-of-microservices-architecture-eww7f.html">全局理解：微服务架构演进</a></p><p class="categories"><a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E3%80%81%E5%BE%AE%E6%9C%8D%E5%8A%A1%E3%80%81%E6%9E%B6%E6%9E%84/">分布式、微服务、架构</a> / <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E3%80%81%E5%BE%AE%E6%9C%8D%E5%8A%A1%E3%80%81%E6%9E%B6%E6%9E%84/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a></p></div></article></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="林庭晚阖" height="28"></a><p class="is-size-7"><span>&copy; 2023 luommy</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="回到顶端" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "此网站使用Cookie来改善您的体验。",
+          dismiss: "知道了！",
+          allow: "允许使用Cookie",
+          deny: "拒绝",
+          link: "了解更多",
+          policy: "Cookie政策",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css"><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/contrib/auto-render.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/contrib/mhchem.min.js" defer></script><script>window.addEventListener("load", function() {
+            document.querySelectorAll('[role="article"] > .content').forEach(function(element) {
+                renderMathInElement(element);
+            });
+        });</script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script><!-- hexo injector body_end start -->
+  <script type="text/javascript" src="/custom/custom.js"></script>
+<!-- hexo injector body_end end --></body></html>
