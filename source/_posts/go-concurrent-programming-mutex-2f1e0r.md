@@ -34,7 +34,7 @@ toc: true
 
 并发编程中涉及一个概念，叫做临界区。临界区就是一个被共享的资源，或者说是一个整体的一组共享资源，比如对数据库的访问、对某一个共享数据结构的操作、对一个 I/O 设备的使用、对一个连接池中的连接的调用，等等。为防止访问、操作错误，使用互斥锁，限定临界区只能同时由一个线程持有。
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312141113212.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926242.png)​
 
 Mutex 是使用最广泛的同步原语（Synchronization primitives，有人也叫做并发原语）
 
@@ -371,7 +371,7 @@ Docker issue 37583、35517、32826、30696等、kubernetes issue72361、71617等
 
 晁岳攀老师给出了“四个阶段”的Mutex演进架构：
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312141113273.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926553.png)​
 
 <span style="font-weight: bold;" data-type="strong">四个阶段：</span>
 
@@ -384,7 +384,7 @@ Docker issue 37583、35517、32826、30696等、kubernetes issue72361、71617等
 
 CAS（Compare and Swap，比较并交换）是一种并发算法，通常用于实现多线程环境下的同步操作。它是一种原子操作，用于在多线程环境下实现对内存中某个位置的值进行读取、比较和更新操作。
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312141113079.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926535.png)​
 
 CAS 指令将给定的值和一个内存地址中的值进行比较，如果它们是同一个值，就使用新值替换内存地址中的值，这个操作是原子性的。那啥是原子性呢？如果你还不太理解这个概念，那么在这里只需要明确一点就行了，那就是原子性保证这个指令总是基于最新的值进行计算，如果<span style="font-weight: bold;" data-type="strong">同时有其它线程已经修改了这个值</span>，那么，CAS 会返回失败。
 
@@ -400,7 +400,7 @@ CAS 指令将给定的值和一个内存地址中的值进行比较，如果它�
 
 当然了对于我来说，一开始并不知道CAS，如果没有一定深度的并发基础我想也不会知道CAS。
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312141113856.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926255.png)​
 
 ‍
 
@@ -535,7 +535,7 @@ const (
 )
 ```
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312141113585.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926053.png)​
 
 ### 请求锁Lock：流程更加复杂
 
@@ -579,11 +579,9 @@ func (m *Mutex) Lock() {
 
 如果想要获取锁的 goroutine 没有机会获取到锁，就会进行休眠，但是在锁释放唤醒之后，它并不能像先前一样直接获取到锁，还是要和正在请求锁的 goroutine 进行竞争。这会给后来请求锁的 goroutine 一个机会，也让 CPU 中正在执行的 goroutine 有更多的机会获取到锁，在一定程度上提高了程序的性能。
 
-‍
-
 核心分类图：
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312141113372.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926768.png)​
 
 请求锁的 goroutine 有两类，一类是新来请求锁的 goroutine，另一类是被唤醒的等待请
 
@@ -756,7 +754,7 @@ func (m *Mutex) Lock() {
 
 没错，这一次优化添加了一种状态模式到state中：
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312141113172.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926582.png)​
 
 ### 核心思路
 
@@ -1014,7 +1012,7 @@ func foo(c Counter) {
 }
 ```
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312141113068.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926050.png)​
 
 第十一行的foo（c），这个时候传入的Couner实例已经是带状态的了
 
@@ -1022,7 +1020,7 @@ func foo(c Counter) {
 
 其实IDE编译环境下其实就有提示了，让你注意了，比如goland环境：
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312141113808.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926765.png)​
 
 除此之外，go运行时还有死锁的检查机制`checkdead方法`​，它能够发现死锁的goroutine
 
@@ -1114,13 +1112,47 @@ func main() {
 
 关键来了，go如何实现可重入锁？
 
-### 方案一：goroutine id
+这其中的关键就是记住哪个goroutine持有这个锁，这处自己可以很容易想到用一个id来标识goroutine，关键就是这个id是在整个阶段什么位置产生的
+
+### 实现可重入锁方案一：goroutine id
+
+获取goroutine id 又有两种方式：1.runtime.Stack 2.hacker
+
+#### runtime.Stack
+
+通过此方法获取栈帧信息，栈帧信息中包含goroutine id
+
+```bash
+goroutine 1 [running]:
+main.main()
+....../main.go:19 +0xb1
+```
+
+第一行格式为 goroutine xxx，其中 xxx 就是 goroutine id，只要解析出这个 id 即可。
+
+解析的方式可以是：
+
+```bash
+func GoID() int {
+	var buf [64]byte
+	n := runtime.Stack(buf[:], false)
+	// 得到id字符串
+	idField := strings.Fields(strings.TrimPrefix(string(buf[:n]), "goroutine"))
+	id, err := strconv.Atoi(idField)
+	if err != nil {
+		panic(fmt.Sprintf("cannot get goroutine id: %v", err))
+	}
+	return id
+}
+```
+
+#### hacker
 
 ‍
 
 ‍
 
-### 方案二：token
+### 实现可重入锁方案二：token
 
 ‍
 
