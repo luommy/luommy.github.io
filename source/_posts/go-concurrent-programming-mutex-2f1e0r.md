@@ -1,7 +1,7 @@
 ---
 title: Go并发编程 | Mutex
 date: '2023-12-06 18:14:22'
-updated: '2023-12-07 14:07:41'
+updated: '2023-12-18 19:28:02'
 excerpt: 全面认识互斥锁Mutex
 tags:
   - golang
@@ -34,7 +34,7 @@ toc: true
 
 并发编程中涉及一个概念，叫做临界区。临界区就是一个被共享的资源，或者说是一个整体的一组共享资源，比如对数据库的访问、对某一个共享数据结构的操作、对一个 I/O 设备的使用、对一个连接池中的连接的调用，等等。为防止访问、操作错误，使用互斥锁，限定临界区只能同时由一个线程持有。
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926242.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928666.png)​
 
 Mutex 是使用最广泛的同步原语（Synchronization primitives，有人也叫做并发原语）
 
@@ -371,7 +371,7 @@ Docker issue 37583、35517、32826、30696等、kubernetes issue72361、71617等
 
 晁岳攀老师给出了“四个阶段”的Mutex演进架构：
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926553.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928601.png)​
 
 <span style="font-weight: bold;" data-type="strong">四个阶段：</span>
 
@@ -384,7 +384,7 @@ Docker issue 37583、35517、32826、30696等、kubernetes issue72361、71617等
 
 CAS（Compare and Swap，比较并交换）是一种并发算法，通常用于实现多线程环境下的同步操作。它是一种原子操作，用于在多线程环境下实现对内存中某个位置的值进行读取、比较和更新操作。
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926535.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928314.png)​
 
 CAS 指令将给定的值和一个内存地址中的值进行比较，如果它们是同一个值，就使用新值替换内存地址中的值，这个操作是原子性的。那啥是原子性呢？如果你还不太理解这个概念，那么在这里只需要明确一点就行了，那就是原子性保证这个指令总是基于最新的值进行计算，如果<span style="font-weight: bold;" data-type="strong">同时有其它线程已经修改了这个值</span>，那么，CAS 会返回失败。
 
@@ -400,7 +400,7 @@ CAS 指令将给定的值和一个内存地址中的值进行比较，如果它�
 
 当然了对于我来说，一开始并不知道CAS，如果没有一定深度的并发基础我想也不会知道CAS。
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926255.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928969.png)​
 
 ‍
 
@@ -535,7 +535,7 @@ const (
 )
 ```
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926053.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928875.png)​
 
 ### 请求锁Lock：流程更加复杂
 
@@ -581,7 +581,7 @@ func (m *Mutex) Lock() {
 
 核心分类图：
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926768.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928565.png)​
 
 请求锁的 goroutine 有两类，一类是新来请求锁的 goroutine，另一类是被唤醒的等待请
 
@@ -754,7 +754,7 @@ func (m *Mutex) Lock() {
 
 没错，这一次优化添加了一种状态模式到state中：
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926582.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928260.png)​
 
 ### 核心思路
 
@@ -1012,7 +1012,7 @@ func foo(c Counter) {
 }
 ```
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181926050.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928146.png)​
 
 第十一行的foo（c），这个时候传入的Couner实例已经是带状态的了
 
