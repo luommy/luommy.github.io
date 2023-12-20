@@ -1,7 +1,7 @@
 ---
 title: Go并发编程 | Mutex
 date: '2023-12-06 18:14:22'
-updated: '2023-12-18 19:28:02'
+updated: '2023-12-20 15:59:37'
 excerpt: 全面认识互斥锁Mutex
 tags:
   - golang
@@ -34,7 +34,7 @@ toc: true
 
 并发编程中涉及一个概念，叫做临界区。临界区就是一个被共享的资源，或者说是一个整体的一组共享资源，比如对数据库的访问、对某一个共享数据结构的操作、对一个 I/O 设备的使用、对一个连接池中的连接的调用，等等。为防止访问、操作错误，使用互斥锁，限定临界区只能同时由一个线程持有。
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928666.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312201559273.png)​
 
 Mutex 是使用最广泛的同步原语（Synchronization primitives，有人也叫做并发原语）
 
@@ -371,7 +371,7 @@ Docker issue 37583、35517、32826、30696等、kubernetes issue72361、71617等
 
 晁岳攀老师给出了“四个阶段”的Mutex演进架构：
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928601.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312201559715.png)​
 
 <span style="font-weight: bold;" data-type="strong">四个阶段：</span>
 
@@ -384,7 +384,7 @@ Docker issue 37583、35517、32826、30696等、kubernetes issue72361、71617等
 
 CAS（Compare and Swap，比较并交换）是一种并发算法，通常用于实现多线程环境下的同步操作。它是一种原子操作，用于在多线程环境下实现对内存中某个位置的值进行读取、比较和更新操作。
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928314.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312201559519.png)​
 
 CAS 指令将给定的值和一个内存地址中的值进行比较，如果它们是同一个值，就使用新值替换内存地址中的值，这个操作是原子性的。那啥是原子性呢？如果你还不太理解这个概念，那么在这里只需要明确一点就行了，那就是原子性保证这个指令总是基于最新的值进行计算，如果<span style="font-weight: bold;" data-type="strong">同时有其它线程已经修改了这个值</span>，那么，CAS 会返回失败。
 
@@ -400,7 +400,7 @@ CAS 指令将给定的值和一个内存地址中的值进行比较，如果它�
 
 当然了对于我来说，一开始并不知道CAS，如果没有一定深度的并发基础我想也不会知道CAS。
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928969.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312201559271.png)​
 
 ‍
 
@@ -535,7 +535,7 @@ const (
 )
 ```
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928875.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312201559989.png)​
 
 ### 请求锁Lock：流程更加复杂
 
@@ -581,7 +581,7 @@ func (m *Mutex) Lock() {
 
 核心分类图：
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928565.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312201559672.png)​
 
 请求锁的 goroutine 有两类，一类是新来请求锁的 goroutine，另一类是被唤醒的等待请
 
@@ -754,7 +754,7 @@ func (m *Mutex) Lock() {
 
 没错，这一次优化添加了一种状态模式到state中：
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312181928260.png)​
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312201559640.png)​
 
 ### 核心思路
 
@@ -1148,43 +1148,457 @@ func GoID() int {
 
 #### hacker
 
-‍
+<u>这是晁老师推荐的方式：</u>
 
-‍
+首先，我们获取运行时的 g 指针，反解出对应的 g 的结构。每个运行的 goroutine 结构的g 指针保存在当前 goroutine 的一个叫做 TLS 对象中。
+
+第一步：我们先获取到 TLS 对象；
+
+第二步：再从 TLS 中获取 goroutine 结构的 g 指针；
+
+第三步：再从 g 指针中取出 goroutine id。
+
+实现过程大致如下：
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+	"unsafe"
+)
+
+// 获取 TLS 对象
+func getTLS() unsafe.Pointer {
+	return unsafe.Pointer(uintptr(unsafe.Pointer(&struct{}{})) - unsafe.Offsetof(goFunc{}.gobuf))
+}
+
+// 获取 goroutine 结构的 g 指针
+func getGPointer(tls unsafe.Pointer) unsafe.Pointer {
+	return *(*unsafe.Pointer)(tls)
+}
+
+// 从 g 指针中获取 goroutine ID
+func getGoroutineID(gPointer unsafe.Pointer) int64 {
+	// 假设 goroutine ID 在 g 结构体的某个字段中
+	// 这里假设该字段为一个 int64 类型
+	gStruct := reflect.TypeOf(goFunc{})
+	idFieldOffset := gStruct.FieldByName("id").Offset
+	idPointer := (*int64)(unsafe.Pointer(uintptr(gPointer) + idFieldOffset))
+	return *idPointer
+}
+
+func main() {
+	tls := getTLS()
+	gPointer := getGPointer(tls)
+	goroutineID := getGoroutineID(gPointer)
+	fmt.Println("Goroutine ID:", goroutineID)
+}
+
+// 简化的 goroutine 结构体示例，实际结构体可能与此不同
+type goFunc struct {
+	gobuf unsafe.Pointer
+	id    int64 // 假设存储 goroutine ID 的字段为 int64 类型
+}
+```
+
+但是问题是不同Go版本的结构可能不同，版本有差异底层又复杂，最好是通过第三方库来获取例如：`petermattis/goid`​，这个支持获取多版本的goroutine id~
+
+#### 实现可重入锁
+
+```go
+// RecursiveMutex 包装一个Mutex,实现可重入
+type RecursiveMutex struct {
+	sync.Mutex
+	owner int64 	// 当前持有锁的goroutine id
+	recursion int32 // 这个goroutine 重入的次数
+}
+
+func (m *RecursiveMutex) Lock() {
+	gid := goid.Get()
+	// 如果当前持有锁的goroutine就是这次调用的goroutine,说明是重入,重入次数+1
+	if atomic.LoadInt64(&m.owner) == gid {
+		m.recursion++
+		return
+	}
+	m.Mutex.Lock()
+	// 不是这次调用的goroutine的话就获得这个goroutine锁的第一次调用，记录下它的goroutine id,调用次数记为1
+	atomic.StoreInt64(&m.owner, gid)
+	m.recursion = 1
+}
+
+func (m *RecursiveMutex) Unlock() {
+	gid := goid.Get()
+
+	// 非持有锁的goroutine尝试释放锁，会解锁失败，必须持有这个锁的goroutine才可以进行后续解锁流程
+	if atomic.LoadInt64(&m.owner) != gid {
+		panic(fmt.Sprintf("wrong the owner(%d): %d!", m.owner, gid))
+	}
+
+	// 调用次数减1
+	m.recursion--
+	if m.recursion != 0 { // 如果这个goroutine还没有完全释放，则直接返回
+		return
+	}
+
+	// 此goroutine最后一次调用，需要释放锁
+	atomic.StoreInt64(&m.owner, -1)
+	m.Mutex.Unlock()
+}
+```
+
+方案一这种方式是用 goroutine 固有的id 做 goroutine 的标识，如果不想碰固有的id可以让 goroutine 自己来提供标识(token来标识自己的身份)。这里有一点：晁老师说Go 开发者不期望你利用 goroutine id 做一些不确定的东西，所以，他们没有暴露获取 goroutine id 的方法，所以截止目前没有这种方法。
 
 ### 实现可重入锁方案二：token
 
-‍
+下面的代码是第二种方案。调用者自己提供一个 token，获取锁的时候把这个 token 传入，释放锁的时候也需要把这个 token 传入。通过用户传入的 token 替换方案一中goroutine id，其它逻辑和方案均一致。
+
+```go
+// Token方式的递归锁
+type TokenRecursiveMutex struct {
+	sync.Mutex
+	token int64 	// 锁实例绑定的token标识，用于标识属于哪个goroutine
+	recursion int32 // 锁递归调用次数 
+}
+
+// 请求锁，需要传入token
+func (m *TokenRecursiveMutex) Lock(token int64) {
+	// atomic.LoadInt64 接收一个 *int64 类型的指针作为参数，并返回指针指向的 int64 类型变量的当前值。
+	// 这个操作会以原子方式读取指定的变量，确保在读取时不会被其他 goroutine 修改。
+	if atomic.LoadInt64(&m.token) == token { //如果传入的token和持有锁的token一致，
+		m.recursion++
+		return
+	}
+	// 传入的token不一致，说明不是递归调用加锁，第一次加锁，记录本次token，记录加锁次数=1
+	m.Mutex.Lock() 
+	atomic.StoreInt64(&m.token, token)
+	m.recursion = 1
+}
+
+// 释放锁
+func (m *TokenRecursiveMutex) Unlock(token int64) {
+	if atomic.LoadInt64(&m.token) != token { // 释放其它token持有的锁
+		panic(fmt.Sprintf("wrong the owner(%d): %d!", m.token, token))
+	}
+	// 满足条件，即此锁确实属于本goroutine
+	m.recursion-- // 当前持有这个锁的token释放锁
+
+	if m.recursion != 0 { // 还没有回退到最初的递归调用，这种情况需要回到 “根调用” 才能进行释放锁的操作，你懂得
+		return
+	}
+
+	atomic.StoreInt64(&m.token, 0) // 没有递归调用了，释放锁
+	m.Mutex.Unlock()
+}
+```
 
 ## 死锁
 
-‍
+死锁的概念其实没什么好讲的：两个或者两个以上的进程（或者线程、goroutine）在执行中，因争夺共享资源而处于一种相互等待的状态，如果没有外部的推动，他们将无法进行下去，则称系统处于死锁状态或者产生了死锁。
 
-‍
+想解决死锁问题就必须至少破坏四个必要条件中的一个：
 
-‍
+* 互斥：至少有一个资源是独享的，具有排他性，如被获得，其他goroutine必须等待
+* 持有和等待：持有一个资源，还在等待其它资源，“吃着碗里看着锅里”
+* 不可剥夺：资源只能由持有它的goroutine来释放
+* 环路等待（我理解就是三角债务问题）：P1等P2，P2等P3，P3等P4，PN等P1
 
-## 著名Go项目issue案例
+这里听晁老师讲的【哲学家就餐问题】耳目一新
 
-‍
+> 哲学家就餐问题
+>
+> 多个哲学家围坐在圆桌旁吃饭，每个哲学家必须执行两个动作：思考和进餐。这些哲学家之间围坐着一些餐叉，每个哲学家之间需要使用两把餐叉来进餐。然而，问题的关键在于餐叉是共享资源，哲学家需要获取两把餐叉才能进餐，而一把餐叉只能被一个哲学家使用。
+>
+> 这个问题存在的主要挑战是如何避免死锁和饥饿，确保每个哲学家都能进餐，并且不会发生死锁（所有哲学家都在等待对方手中的餐叉）或饥饿（某些哲学家永远无法进餐）的情况。
+>
+> 	经典的解决方案通常是通过引入特定的算法或规则来确保资源的安全获取，其中最常见的是 Dijkstra 提出的「哲学家就餐问题」的解决方案之一：使用资源层次结构分配资源。该算法包括以下规则：
+>
+> 	①每个哲学家在就餐前<u>必须先获取左右两边的餐叉</u>，这保证了只有同时拿到两把餐叉的哲学家才能进餐。
+>
+> 	②餐叉被定义为资源，<u>每个哲学家在尝试获取餐叉时，按照编号低到高的顺序来获取</u>。这样可以避免循环等待（哲学家之间互相等待对方手中的餐叉）的情况。
 
-‍
+然后晁老师又讲了个笑话：“有一次我去派出所开证明，派出所要求物业先证明我是本物业的业主，但是，物业要我提供派出所的证明，才能给我开物业证明，结果就陷入了死锁状态。”这种事情比比皆是，让你感觉很难受，同样地，系统中或者你写的代码中出现了这样的问题你也很难受，：）
 
-‍
+```go
+ package main
 
-‍
+import (
+	"fmt"
+	"sync"
+	"time"
+)
 
-‍
+/**
+   @Title main
+   @Description 派出所与物业的死锁问题
+   @Author luommy 2023-12-19 10:28:14
+**/
 
-‍
+func main() {
+	// 派出所证明
+	var psCertificate sync.Mutex
+	// 物业证明
+	var poProperty sync.Mutex
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// 派出所处理goroutine
+	go func() {
+		defer wg.Done()
+
+		psCertificate.Lock()
+		defer psCertificate.Unlock()
+
+		// 检查材料
+		time.Sleep(5 * time.Second)
+		// 请求物业的材料
+		poProperty.Lock()
+		poProperty.Unlock()
+
+	}()
+
+	// 物业处理goroutine
+	go func() {
+		defer wg.Done() // 物业处理完成
+		poProperty.Lock()
+		defer poProperty.Unlock()
+		// 检查材料
+		time.Sleep(5 * time.Second)
+		// 请求派出所的证明
+		psCertificate.Lock()
+		psCertificate.Unlock()
+	}()
+	wg.Wait()
+	fmt.Println("成功完成！")
+
+}
+
+```
+
+## 著名的issue案例
+
+<span style="font-weight: bold;" data-type="strong">Docker：</span>
+
+issue36114：重复加锁（Go标准库不支持重入锁）
+
+issue34881：重构代码的时候遇见错误直接返回，忘记释放锁
+
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312201559470.png)​
+
+<span style="font-weight: bold;" data-type="strong">Kubernates: </span>
+
+issue72361: 有data race数据竞争的问题，加锁解决
+
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312201559209.png)​
+
+issue45192：是一个返回时忘记 Unlock 的典型例子，同docker issue 34881
+
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312201559172.png)​
+
+保证 Lock/Unlock 成对出现，尽可能采用 defer mutex.Unlock 的方式，把它们成对、紧凑地写在一起。
+
+并发程序最难跟踪调试的就是很难重现，因为并发问题不是按照我们指定的顺序执行的，由于计算机调度的问题和事件触发的时机不同，死锁的 Bug 可能会在极端的情况下出现。
+
+通过搜索日志、查看日志，我们能够知道程序有异常了，比如某个流程一直没有结束。这个时候，可以通过 Go pprof 工具分析，它提供了一个 block profiler 监控阻塞的goroutine。除此之外，我们还可以查看全部的 goroutine 的堆栈信息，通过它，你可以查看阻塞的 groutine 究竟阻塞在哪一行哪一个对象上了。
+
+问题思考：
+
+在当前的函数中Lock，然后在调用的函数中Unlock？
+
+锁的释放位置问题？
+
+还有一些其它的问题吗？
 
 # Mutex扩展功能
 
-‍
+共识：如果互斥锁被某个 goroutine 获取了，而且还没有释放，那么，其他请求这把锁的 goroutine，就会阻塞等待，直到有机会获得这把锁。有时候阻塞并不是一个很好的主意，比如你请求锁更新一个计数器，如果获取不到锁的话没必要等待，大不了这次不更新，我下次更新就好了，如果阻塞的话会导致业务处理能力的下降。
 
-‍
+再比如，如果要监控锁的竞争情况，一个监控指标就是，等待这把锁的 goroutine 数量。我们可以把这个指标推送到时间序列数据库中，再通过一些监控系统（比如P+G）展示出来。要知道，锁是性能下降的“罪魁祸首”之一，所以，有效地降低锁的竞争，就能够很好地提高性能。因此，监控关键互斥锁上等待的 goroutine 的数量，是我们分析锁竞争的激烈程度的一个重要指标。
 
-‍
+## 实现TryLock
+
+当一个 goroutine 调用这个TryLock 方法请求锁的时候，如果这把锁没有被其他 goroutine 所持有，那么，这个goroutine 就持有了这把锁，并返回 true；如果这把锁已经被其他 goroutine 所持有，或者是正在准备交给某个被唤醒的 goroutine，那么，这个请求锁的 goroutine 就直接返回false，不会阻塞在方法调用上
+
+​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202312201559967.png)​
+
+在实际开发中，如果要更新配置数据，我们通常需要加锁，这样可以避免同时有多个goroutine 并发修改数据。有的时候，我们也会使用 TryLock。这样一来，当某个goroutine 想要更改配置数据时，如果发现已经有 goroutine 在更改了，其他的goroutine 调用 TryLock，返回了 false，这个 goroutine 就会放弃更改。
+
+Java提供了TryLock方式，Go曾经也在讨论这个，但是没有做，可以使用Channel实现TryLock
+
+```go
+// 复制Mutex定义的常量
+const (
+	mutexLocked = 1 << iota // 加锁标识位置
+	mutexWoken // 唤醒标识位置
+	mutexStarving // 锁饥饿标识位置
+	mutexWaiterShift = iota // 标识waiter的起始bit位置
+)
+
+// 扩展一个Mutex结构
+type Mutex struct {
+	sync.Mutex
+}
+
+// 尝试获取锁
+func (m *Mutex) TryLock() bool {
+	// 如果能成功抢到锁
+	// atomic.CompareAndSwapInt32()是一个原子比较和交换函数，它接受三个参数：指向要操作的整数值的指针、旧的期望值和新的值。它会比较指定地址处的整数值和旧的期望值，如果相等，则将其更新为新的值，并返回是否替换成功的布尔值。
+	if atomic.CompareAndSwapInt32((*int32)(unsafe.Pointer(&m.Mutex)), 0, mutexLocked){
+		return true
+	}
+	// 如果处于唤醒、加锁或者饥饿状态，这次请求就不参与竞争了，返回false
+	old := atomic.LoadInt32((*int32)(unsafe.Pointer(&m.Mutex)))
+	if old&(mutexLocked|mutexStarving|mutexWoken) != 0 {
+		return false
+	}
+	// 尝试在竞争的状态下请求锁
+	new := old | mutexLocked
+	return atomic.CompareAndSwapInt32((*int32)(unsafe.Pointer(&m.Mutex)), old, new)
+}
+
+func main() {
+	m := &Mutex{}
+
+	if m.TryLock() {
+		// 成功获取锁
+		// ...处理逻辑
+		m.Unlock() // 使用完毕后解锁
+	} else {
+		// 未能获取锁
+	}
+}
+```
+
+第18行是一个 fast path，如果幸运，没有其他 goroutine 争这把锁，那么，这把锁就会被这个请求的 goroutine 获取，直接返回。
+
+如果锁已经被其他 goroutine 所持有，或者被其他唤醒的 goroutine 准备持有，那么，就直接返回 false，不再请求，代码逻辑在第 23 行。
+
+如果没有被持有，也没有其它唤醒的 goroutine 来竞争锁，锁也不处于饥饿状态，就尝试获取这把锁（第 28 行），不论是否成功都将结果返回。因为，这个时候，可能还有其他的goroutine 也在竞争这把锁，所以，不能保证成功获取这把锁。
+
+## 如何验证 TryLock 的机制是否工作
+
+程序运行时会启动一个 goroutine 持有这把我们自己实现的锁，经过随机的时间才释放。主 goroutine 会尝试获取这把锁。如果前一个goroutine 一秒内释放了这把锁，那么，主 goroutine 就有可能获取到这把锁了，输出“got the lock”，否则没有获取到也不会被阻塞，会直接输出“can't get the lock”。
+
+```go
+func try() {
+	var mu Mutex
+	go func() { // 启动一个goroutine持有一段时间的锁
+		mu.Lock()
+		time.Sleep(time.Duration(rand.Intn(2)) * time.Second)
+		mu.Unlock()
+	}()
+
+	time.Sleep(time.Second)
+	ok := mu.TryLock() // 尝试获取到锁
+	if ok { // 获取成功
+		fmt.Println("got the lock")
+		// do something
+		mu.Unlock()
+		return
+	}
+
+	// 没有获取到	
+	fmt.Println("can't get the lock")
+}
+```
+
+## 获取等待者的数量等指标
+
+Mutex 结构中的 state 字段有很多个含义，通过 state 字段，你可以知道锁是否已经被某个 goroutine 持有、当前是否处于饥饿状态、是否有等待的 goroutine 被唤醒、等待者的数量等信息。但是，state 这个字段并没有暴露出来，所以，我们需要想办法获取到这个字段，并进行解析
+
+如何获取到state字段？
+
+```go
+const (
+	mutexLocked      = 1 << iota // 加锁标识位置
+	mutexWoken                   // 唤醒标识位置
+	mutexStarving                // 锁饥饿标识位置 
+	mutexWaiterShift = iota      // 标识waiter的起始bit位置
+)
+
+type Mutex struct {
+	sync.Mutex
+}
+
+func (m *Mutex) Count() int {
+	// 获取state字段的值
+	v := atomic.LoadInt32((*int32)(unsafe.Pointer(&m.Mutex)))
+	v = v >> mutexWaiterShift // 得到等待者的数值
+	v = v + (v & mutexLocked) // 再加上锁持有者的数量，0或者1
+	return int(v)
+}
+```
+
+这个例子的第 14 行通过 unsafe 操作，我们可以得到 state 字段的值。
+
+第 15 行我们右移三位（<span style="font-weight: bold;" data-type="strong">这里的常量 mutexWaiterShift 的值为 3</span>），就得到了当前等待者的数量。如果当前的锁已经被其他 goroutine 持有，那么，我们就稍微调整一下这个值，加上一个 1（第16行），你基本上可以把它看作是当前持有和等待这把锁的 goroutine 的总数。
+
+state 这个字段的第一位是用来标记锁是否被持有，第二位用来标记是否已经唤醒了一个等待者，第三位标记锁是否处于饥饿状态，通过分析这个 state 字段我们就可以得到这些状态信息。我们可以为这些状态提供查询的方法，这样就可以实时地知道锁的状态了。
+
+```go
+// 锁是否被持有
+func (m *Mutex) IsLocked() bool {
+	state := atomic.LoadInt32((*int32)(unsafe.Pointer(&m.Mutex)))
+	return state&mutexLocked == mutexLocked
+}
+
+// 是否有等待者被唤醒
+func (m *Mutex) IsWoken() bool {
+	state := atomic.LoadInt32((*int32)(unsafe.Pointer(&m.Mutex)))
+	return state&mutexWoken == mutexWoken
+}
+
+// 锁是否处于饥饿状态
+func (m *Mutex) IsStarving() bool {
+	state := atomic.LoadInt32((*int32)(unsafe.Pointer(&m.Mutex)))
+	return state&mutexStarving == mutexStarving
+}
+
+```
+
+## 使用Mutex实现一个线程安全的队列
+
+通过 Slice 实现的队列不是线程安全的，出队（Dequeue）和入队（Enqueue）会有 data race 的问题。这个时候，Mutex 就要隆重出场了，通过它，我们可以在出队和入队的时候加上锁的保护。
+
+```go
+type SliceQueue struct {
+	data []interface{}
+	mu sync.Mutex
+}
+
+func NewSliceQueue(n int) (q *SliceQueue) {
+	return &SliceQueue{data: make([]interface{}, 0, n)}
+}
+
+// Enqueue 把值放在队尾
+func (q *SliceQueue) Enqueue(v interface{}) {
+	q.mu.Lock()
+	q.data = append(q.data, v)
+	q.mu.Unlock()
+}
+
+// Dequeue 移去队头并返回
+func (q *SliceQueue) Dequeue() interface{} {
+	q.mu.Lock()
+	if len(q.data) == 0 {
+		q.mu.Unlock()
+		return nil
+	}
+	v := q.data[0]
+	q.data = q.data[1:]
+	q.mu.Unlock()
+	return v
+}
+```
+
+因为标准库中没有线程安全的队列数据结构的实现，所以，你可以通过 Mutex 实现一个简单的队列。通过 Mutex 我们就可以为一个非线程安全的 data interface{}实现线程安全的访问。
+
+我的思考：使用Mutex实现一个线程安全的映射Map？
+
+# 总结
+
+思维导图总结...后续补充...
 
 # 思考问题
 
