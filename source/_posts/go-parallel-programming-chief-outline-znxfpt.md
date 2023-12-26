@@ -1,20 +1,5 @@
----
-title: Go并发编程 | 总纲
-date: '2023-12-06 17:50:18'
-updated: '2023-12-07 14:02:37'
-excerpt: 我的并发编程系列总纲
-tags:
-  - golang
-  - 并发编程
-categories:
-  - Golang
-  - 并发编程
-permalink: /post/go-parallel-programming-chief-outline-znxfpt.html
-comments: true
-toc: true
----
 
-# Go并发编程 | 总纲
+
 
 > 本专题参考以晁岳攀老师为主，以培养全面、系统的Go并发编程学习体系。
 >
