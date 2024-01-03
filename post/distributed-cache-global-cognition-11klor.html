@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>分布式缓存全局认知 - 林庭晚阖</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="林庭晚阖"><meta name="msapplication-TileImage" content="/img/kafka.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="林庭晚阖"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="一文系统认识缓存全局"><meta property="og:type" content="blog"><meta property="og:title" content="分布式缓存全局认知"><meta property="og:url" content="https://luommy.github.io/post/distributed-cache-global-cognition-11klor.html"><meta property="og:site_name" content="林庭晚阖"><meta property="og:description" content="一文系统认识缓存全局"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610970.png"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610989.png"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610737.png"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610422.png"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610175.png"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610893.png"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610584.png"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610285.png"><meta property="og:image" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610232.png"><meta property="article:published_time" content="2024-01-03T08:09:58.000Z"><meta property="article:modified_time" content="2024-01-03T08:09:59.000Z"><meta property="article:author" content="luommy"><meta property="article:tag" content="缓存"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610970.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://luommy.github.io/post/distributed-cache-global-cognition-11klor.html"},"headline":"分布式缓存全局认知","image":["https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610970.png","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610989.png","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610737.png","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610422.png","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610175.png","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610893.png","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610584.png","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610285.png","https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610232.png"],"datePublished":"2024-01-03T08:09:58.000Z","dateModified":"2024-01-03T08:09:59.000Z","author":{"@type":"Person","name":"luommy"},"publisher":{"@type":"Organization","name":"林庭晚阖","logo":{"@type":"ImageObject","url":"https://luommy.github.io/img/logo.svg"}},"description":"一文系统认识缓存全局"}</script><link rel="canonical" href="https://luommy.github.io/post/distributed-cache-global-cognition-11klor.html"><link rel="icon" href="/img/kafka.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/vs.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><script>var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "//hm.baidu.com/hm.js?ecf13ffee9f4083d9a74b337b541f90b";
+            var s = document.getElementsByTagName("script")[0];
+            s.parentNode.insertBefore(hm, s);
+        })();</script><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script>
+  <link rel="stylesheet" href="/custom/custom.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="林庭晚阖" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">首页</a><a class="navbar-item" href="/archives">文章</a><a class="navbar-item" href="/tags/timeline">心情</a><a class="navbar-item" href="/categories">分类</a><a class="navbar-item" href="/tags">标签</a><a class="navbar-item" href="/links.html">友链</a><a class="navbar-item" href="/guestbook.html">留言</a><a class="navbar-item" href="/about.html">关于</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="发邮件" href="mailto:jdonglecool@163.com"><i class="fab fa-regular fa-envelope"></i></a><a class="navbar-item" target="_blank" rel="noopener" title="GitHub" href="https://github.com/luommy"><i class="fab fa-github"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="目录" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-8-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><time dateTime="2024-01-03T08:09:58.000Z" title="1/3/2024, 8:09:58 AM">2024-01-03</time>发表</span><span class="level-item"><time dateTime="2024-01-03T08:09:59.000Z" title="1/3/2024, 8:09:59 AM">2024-01-03</time>更新</span><span class="level-item"><a class="link-muted" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E3%80%81%E5%BE%AE%E6%9C%8D%E5%8A%A1%E3%80%81%E6%9E%B6%E6%9E%84/">分布式、微服务、架构</a><span> / </span><a class="link-muted" href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E3%80%81%E5%BE%AE%E6%9C%8D%E5%8A%A1%E3%80%81%E6%9E%B6%E6%9E%84/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></span><span class="level-item">1 小时读完 (大约7119个字)</span></div></div><h1 class="title is-3 is-size-4-mobile">分布式缓存全局认知</h1><div class="content"><hr>
+<ul>
+<li>缓存背景与项目需要</li>
+<li>缓存的发展：本地缓存和分布式缓存</li>
+<li>最常见的缓存技术与Mysql与Redis缓存同步一致性</li>
+</ul>
+<hr>
+<blockquote>
+<p>认知之路</p>
+<p>有些东西不接触永远不知道为什么是这样的，之前可能会觉得：我不了解Mysql日志相关内容、Mysql日志底层的相关原理并不影响我对Mysql的CRUD，日志篇的核心正是undo log 、redo log 、binlog，不深入研究他们的原理可能就永远不知道Mysql集群建设的核心部分。或者可以说你深刻理解Mysql日志篇的原理，Mysql集群就是小菜一碟，日志篇的内容我也做了一些总结和理解：Mysql-日志篇（一）</p>
+</blockquote>
+<h1 id="背景与介绍"><a href="#背景与介绍" class="headerlink" title="背景与介绍"></a>背景与介绍</h1><p>我们的微服务项目中缓存是考虑的因素，在目前我们的分布式环境下，缓存最大的问题可能就是一致性问题，一旦没有管理好可能会造成不小的Bug，缓存对于微服务的提升是巨大的，也是当下行业主流的解决方案之一。</p>
+<p>既然项目中使用了缓存，且在分布式的环境下，必然会涉及到分布式缓存的常见问题，及时未雨绸缪，针对全局整体建立起系统性的认知对于我们开发和维护项目有着不小的帮助，开发时会思路清晰考虑的更加全面，维护时会快速定位问题所在，快速解决问题。</p>
+<p><span style="font-weight: bold;" data-type="strong"><em>缓存，消息队列，分库分表</span></em> 是高并发解决方案三剑客。</p>
+<p>同样缓存、限流、降级我理解更加倾向于微服务治理三板斧，可见缓存在开发中具有不可取代的地位，不论你的项目如何，大概率是离不开缓存的。</p>
+<p>其实从宏观程度下理解：缓存是一个通用化的概念，或许对于我们后端开发，好像只有Redis缓存，其实不止步于此，从架构师角度或者资深开发分析:</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610970.png" alt="image">​</p>
+<p>整个业务流程中，从前端 Web 请求，到网络传输，再到服务端和数据库服务，各个阶段都有缓存的应用，这才是完整的体系。</p>
+<p>如果要再底层认知，可能就是：操作系统设计的多种缓存，比如 Page Cache、Buffer Cache 等技术。</p>
+<p>缓存之所以能够让系统“更快”，本质上做到了如下两点：</p>
+<ul>
+<li><p>减小 CPU 消耗</p>
+<p>将原来需要实时计算的内容提前算好、把一些公用的数据进行复用，这可以减少 CPU 消耗，从而提升响应性能。</p>
+</li>
+<li><p>减小 I&#x2F;O 消耗</p>
+<p>将原来对网络、磁盘等较慢介质的读写访问变为对内存等较快介质的访问，从而提升响应性能。</p>
+</li>
+</ul>
+<p>其实很多涉及到操作系统层次的思考很容易就想到IO问题、CPU问题</p>
+<p>对于<span style="font-weight: bold;" data-type="strong">应用系统</span>来讲，经常将缓存划分为<span style="font-weight: bold;" data-type="strong">本地缓存</span>和<span style="font-weight: bold;" data-type="strong">分布式缓存</span>。</p>
+<p><span style="font-weight: bold;" data-type="strong">本地缓存</span> ：应用中的缓存组件，缓存组件和应用在同一进程中，缓存的读写非常快，没有网络开销。但各应用或集群的各节点都需要维护自己的单独缓存，无法共享缓存。</p>
+<p>​<span style="font-weight: bold;" data-type="strong">分布式缓存</span>​：和应用分离的缓存组件或服务，与本地应用隔离，多个应用可直接共享缓存。</p>
+<p>我的目标是：在面对不同的业务场景时，能够做出合理的缓存选型。</p>
+<h1 id="本地缓存与分布式缓存"><a href="#本地缓存与分布式缓存" class="headerlink" title="本地缓存与分布式缓存"></a>本地缓存与分布式缓存</h1><h2 id="本地缓存-JDK-Map"><a href="#本地缓存-JDK-Map" class="headerlink" title="本地缓存 JDK Map"></a>本地缓存 JDK Map</h2><p>JDK Map 经常用于缓存实现：</p>
+<ul>
+<li><p>HashMap</p>
+<p>HashMap 是一种基于哈希表的集合类，它提供了快速的插入、查找和删除操作。可以将键值对作为缓存项的存储方式，将键作为缓存项的唯一标识符，值作为缓存项的内容。</p>
+</li>
+<li><p>ConcurrentHashMap</p>
+<p>ConcurrentHashMap 是线程安全的 HashMap，它在多线程环境下可以保证高效的并发读写操作。</p>
+</li>
+<li><p>LinkedHashMap</p>
+<p>LinkedHashMap 是一种有序的 HashMap ，它保留了元素插入的顺序，可以按照插入顺序或者访问顺序进行遍历。</p>
+</li>
+<li><p>TreeMap</p>
+<p>TreeMap 是一种基于红黑树的有序 Map，它可以按照键的顺序进行遍历。</p>
+</li>
+</ul>
+<p>我看了一个例子：</p>
+<p>艺龙红包系统，<span style="font-weight: bold;" data-type="strong">红包活动</span>就是<span style="font-weight: bold;" data-type="strong">存储在ConcurrentHashMap</span> 中 ，通过<span style="font-weight: bold;" data-type="strong">定时任务刷新缓存</span> 。</p>
+<p><span style="font-weight: bold;" data-type="strong">这也是单体服务最常用的一种设计思路</span></p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610989.png" alt="图片">​</p>
+<p>核心流程：</p>
+<p>1、红包系统启动后，初始化一个 ConcurrentHashMap 作为红包活动缓存 ；</p>
+<p>2、数据库查询所有的红包活动 , 并将活动信息存储在 Map 中 ;</p>
+<p>3、定时任务每隔 30 秒 ，执行缓存加载方法，刷新缓存。</p>
+<p>为什么将红包活动信息存储在本地内存 ConcurrentHashMap 呢 ？</p>
+<ul>
+<li>红包系统是高并发应用，快速将请求结果响应给前端，大大提升用户体验；——满足高并发</li>
+<li>红包活动<u><span style="font-weight: bold;" data-type="strong"><em>数量 </span></em></u> 并不多，就算全部放入到 Map 里也不会产生内存溢出的问题；——满足性能要求</li>
+<li>定时任务刷新缓存并不会影响红包系统的业务。——满足服务合理性</li>
+</ul>
+<p>很多<span style="font-weight: bold;" data-type="strong">单体应用</span>都使用这种方案，该方案的特点是简洁易用，工程实现也容易 。这个例子也很好很清晰。</p>
+<h2 id="本地缓存"><a href="#本地缓存" class="headerlink" title="本地缓存"></a>本地缓存</h2><p>虽然使用 JDK Map 能快捷构建缓存，但缓存的功能还是比较孱弱的。</p>
+<p>因为现实场景里，我们可能需要给缓存添加​<span style="font-weight: bold;" data-type="strong">缓存统计</span>、<span style="font-weight: bold;" data-type="strong">过期失效</span>、<span style="font-weight: bold;" data-type="strong">淘汰策略</span>等功能。<span style="font-weight: bold;" data-type="strong">本地缓存框架</span>应运而生。</p>
+<p>流行的 Java 缓存框架包括：Ehcache , Google Guava ,  Caffeine Cache</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610737.png" alt="图片">​</p>
+<p>go中常见的缓存框架应该就是<a target="_blank" rel="noopener" href="https://github.com/patrickmn/go-cache">go-cache</a>了​​</p>
+<p>虽然本地缓存框架的功能很强大，但是本地缓存的缺陷依然明显。</p>
+<p>1、高并发的场景，​<span style="font-weight: bold;" data-type="strong">应用重启之后，本地缓存就失效了，系统的负载就比较大</span>​，需要花较长的时间才能恢复；</p>
+<p>2、每个应用节点都会维护自己的单独缓存，<span style="font-weight: bold;" data-type="strong">缓存同步比较头疼</span>。</p>
+<p>对于后端人员而言，提缓存问题肯定大概是分布式的缓存问题，也大概率是这个位置进行优化</p>
+<h2 id="分布式缓存"><a href="#分布式缓存" class="headerlink" title="分布式缓存"></a>分布式缓存</h2><p><span style="font-weight: bold;" data-type="strong">分布式缓存是指将缓存数据分布在多台机器上，以提高缓存容量和并发读写能力的缓存系统。</span> 分布式缓存通常由多台机器组成一个集群，每台机器上都运行着相同的缓存服务进程，缓存数据被均匀地分布在集群中的各个节点上。</p>
+<p>Redis 是分布式缓存的首选，甚至我们一提到缓存，很多后端工程师首先想到的就它。</p>
+<p>下图是神州专车订单的 Redis 集群架构 。将 Redis 集群拆分成四个分片，每个分片包含一主一从，主从可以切换。应用 A 根据不同的缓存 key 访问不同的分片。</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610422.png" alt="图片">​</p>
+<p>与本地缓存相比，分布式缓存具有以下优点：</p>
+<p><span style="font-weight: bold;" data-type="strong">1、容量和性能可扩展</span></p>
+<p>通过增加集群中的机器数量，可以扩展缓存的容量和并发读写能力。同时，缓存数据对于应用来讲都是共享的。</p>
+<p><span style="font-weight: bold;" data-type="strong">2、高可用性</span></p>
+<p>由于数据被分布在多台机器上，即使其中一台机器故障，缓存服务也能继续提供服务。</p>
+<p><span style="font-weight: bold;" data-type="strong">分布式缓存的缺点</span>：</p>
+<p><span style="font-weight: bold;" data-type="strong">1、网络延迟</span></p>
+<p>分布式缓存通常需要通过网络通信来进行数据读写，可能会出现网络延迟等问题，相对于本地缓存而言，响应时间更长。</p>
+<p><span style="font-weight: bold;" data-type="strong">2、复杂性</span></p>
+<p>分布式缓存需要考虑序列化、数据分片、缓存大小等问题，相对于本地缓存而言更加复杂。且在分布式下很多问题可能并不是单一的问题，很有可能触发连锁反应，导致一系列的问题，这是个基础的认知。</p>
+<hr>
+<blockquote>
+<p>真实的案例</p>
+<p>分布式缓存的认知的提升：</p>
+<p>2014年，同事开发了比分直播的系统，所有的请求都是从分布式缓存 Memcached 中获取后直接响应。常规情况下，从缓存中查询数据非常快，但在线用户稍微多一点，整个系统就会特别卡。</p>
+<p>通过 jstat 命令发现 GC 频率极高，几次请求就将新生代占满了，而且 CPU 的消耗都在 GC 线程上。初步判断是缓存值过大导致的，果不其然，缓存大小在 300k 到 500k 左右。</p>
+<p>解决过程还比较波折，分为两个步骤：</p>
+<ol>
+<li><span style="font-weight: bold;" data-type="strong">修改新生代大小</span>，从原来的 2G 修改成 4G，并精简缓存数据大小 (从平均 300k 左右降为 80k 左右)；</li>
+<li>把<span style="font-weight: bold;" data-type="strong">缓存拆成两个部分</span>，第一部分是<span style="font-weight: bold;" data-type="strong">全量数据</span>，第二部分是<span style="font-weight: bold;" data-type="strong">增量数据</span>（数据量很小）。页面第一次请求拉取全量数据，当比分有变化的时候，通过 websocket 推送增量数据。</li>
+</ol>
+</blockquote>
+<p>经过这次优化，深刻认识到：缓存虽然可以提升整体速度，但是在高并发场景下，缓存对象大小依然是需要关注的点，稍不留神就会产生事故。另外我们也需要合理地控制读取策略，最大程度减少 GC 的频率 , 从而提升整体性能。</p>
+<h1 id="多级缓存"><a href="#多级缓存" class="headerlink" title="多级缓存"></a>多级缓存</h1><p>多级缓存是一个解决方案，主要就是提供了多层的缓存以解决问题，对于一些大型项目可能会用到</p>
+<p>开源中国网站最开始完全是用本地缓存框架 Ehcache 。后来随着访问量的激增，出现了一个可怕的问题：“因为 Java 程序更新很频繁，每次更新的时候都要重启。一旦重启后，整个 Ehcache 缓存里的数据都被清掉。重启后若大量访问进来的话，开源中国的数据库基本上很快就会崩掉”。</p>
+<p>于是，开源中国开发了多级缓存框架  ​<span style="font-weight: bold;" data-type="strong">J2Cache</span>​，使用了多级缓存 <span style="font-weight: bold;" data-type="strong">Ehcache + Redis</span> 。</p>
+<p>多级缓存有如下优势：</p>
+<ol>
+<li>离用户越近，速度越快；</li>
+<li>减少分布式缓存查询频率，降低序列化和反序列化的 CPU 消耗；</li>
+<li>大幅度减少网络 IO 以及带宽消耗。</li>
+</ol>
+<p>本地缓存做为一级缓存，分布式缓存做为二级缓存，首先从一级缓存中查询，若能查询到数据则直接返回，否则从二级缓存中查询，若二级缓存中可以查询到数据，则回填到一级缓存中，并返回数据。若二级缓存也查询不到，则从数据源中查询，将结果分别回填到一级缓存，二级缓存中。</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610175.png" alt="图片">、</p>
+<blockquote>
+<p>真实案例</p>
+<p>2018年，一家电商公司需要进行 app 首页接口的性能优化。采取的是两级缓存模式，同时利用了 Guava 的惰性加载机制，整体架构如下图所示：</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610893.png" alt="图片">​</p>
+<p>缓存读取流程如下：</p>
+<p>1、业务网关刚启动时，本地缓存没有数据，读取 Redis 缓存，如果 Redis 缓存也没数据，则通过 RPC 调用导购服务读取数据，然后再将数据写入本地缓存和 Redis 中；若 Redis 缓存不为空，则将缓存数据写入本地缓存中。</p>
+<p>2、由于步骤1已经对本地缓存预热，后续请求直接读取本地缓存，返回给用户端。</p>
+<p>3、Guava 配置了 refresh 机制，每隔一段时间会调用自定义 LoadingCache 线程池（5个最大线程，5个核心线程）去导购服务同步数据到本地缓存和 Redis 中。</p>
+<p>优化后，性能表现很好，平均耗时在 5ms 左右。最开始我以为出现问题的几率很小，可是有一天晚上，突然发现 app 端首页显示的数据时而相同，时而不同。</p>
+<p>也就是说：虽然 LoadingCache 线程一直在调用接口更新缓存信息，但是各个服务器本地缓存中的数据并非完成一致。说明了两个很重要的点：</p>
+<pre><code>1、惰性加载仍然可能造成多台机器的数据不一致
+
+2、LoadingCache 线程池数量配置的不太合理,  导致了线程堆积
+</code></pre>
+<p>最终的解决方案是：</p>
+<pre><code>1、惰性加载结合消息机制来更新缓存数据，也就是：当导购服务的配置发生变化时，通知业务网关重新拉取数据，更新缓存。
+
+2、适当调大 LoadigCache 的线程池参数，并在线程池埋点，监控线程池的使用情况，当线程繁忙时能发出告警，然后动态修改线程池参数。
+</code></pre>
+</blockquote>
+<p>最常用最经典的解决方案无疑是从Mysql与Redis开展，因为分布式缓存大都是通过Redis实现，Redis的强大不言而喻。</p>
+<p>对于缓存，针对于我们的业务而言，常用的一些数据，为了避免反复查询也好、不方便查询也罢，想避免反复进行服务之间的调用就需要使用缓存来解决问题。比如最最常用的用户信息，正常不会经常改动这个东西，本质来说属于“查多写少”的性质，这种的可以理解为热点数据，这也是热点数据的基本属性，这部分数据就可以放在缓存中，由此联想单机情况下如何利用Map实现缓存，但是分布式情况下就不一样了，市面上目前几乎都是使用Redis来解决的，将“用户信息”相关数据放入Redis缓存中，以增加查询效率，这里面的就涉及到很多细节上的问题，总体来说最核心的就是一致性问题。</p>
+<h2 id="操作手法"><a href="#操作手法" class="headerlink" title="操作手法"></a>操作手法</h2><p>即分布式环境下，对于你的服务业务数据如何保证一致性？</p>
+<p>顺序大概是可以分为下面四种情况：</p>
+<ol>
+<li>先更新数据库，再更新缓存</li>
+<li>先更新缓存，再更新数据库</li>
+<li>先删除缓存，再更新数据库</li>
+<li>先更新数据库，再删除缓存</li>
+</ol>
+<p>在参考了大量资料后我觉得还是要<span style="font-weight: bold;" data-type="strong"><u>清楚整个脉络才是最重要的</u></span>，比如我们的“用户信息”缓存采用的是删除策略还是更新策略、</p>
+<p>然后再考虑是先更新（删除）数据库还是先更新（删除）缓存，即2X2&#x3D;4</p>
+<h2 id="删除缓存与更新缓存"><a href="#删除缓存与更新缓存" class="headerlink" title="删除缓存与更新缓存"></a>删除缓存与更新缓存</h2><p>删除缓存对比更新缓存</p>
+<ul>
+<li>删除缓存: 数据只会写入数据库，不会写入缓存，只会删除缓存，也就是缓存还需要从数据库中重新读</li>
+<li>更新缓存: 数据不但写入数据库，还会写入缓存</li>
+</ul>
+<p><span style="font-weight: bold;" data-type="strong">删除缓存</span></p>
+<ul>
+<li>优点：操作简单，无论更新操作是否复杂，直接删除，并且能防止更新出现的线程安全问题，在更新链路长的时候有优势</li>
+<li>缺点：删除后，下一次查询无法在 cache 中查到，会有一次 Cache Miss，在下一次查询中需要重新读取数据库，“重新恢复为热点数据”，高并发下可能会出现上面说的缓存问题</li>
+</ul>
+<p><span style="font-weight: bold;" data-type="strong">更新缓存</span></p>
+<ul>
+<li>优点：命中率高，直接更新缓存，不会有 Cache Miss 的情况</li>
+<li>缺点：更新缓存消耗较大，尤其在复杂的操作流程中,在复杂的涉及到缓存计算的场景下很差</li>
+</ul>
+<p>那到底是选择更新缓存还是删除缓存呢，主要取决于更新缓存的复杂度</p>
+<ul>
+<li>更新缓存的代价很小，此时我们应该更倾向于更新缓存，以保证更高的缓存命中率</li>
+<li>更新缓存的代价很大，此时我们应该更倾向于删除缓存</li>
+</ul>
+<p>例如：只是简单的更新一下用户登录情况，只操作一个字段，那就可以采用更新缓存，还有类似秒杀下商品库存数量这种并发下查询频繁的数据，也可以使用更新缓存，不过也要注意线程安全的问题，防止产生脏数据。但是当更新操作的逻辑较复杂时，需要涉及到其它数据，如用户购买商品付款时，需要考虑打折、优惠券、红包等多种因素，这样需要缓存与数据库进行多次交互，将打折等信息传入缓存，再与缓存中的其它值进行计算才能得到最终结果，此时更新缓存的消耗要大于直接淘汰缓存，这个时候通常会采用淘汰的方式。</p>
+<p>最终还是要根据业务场景来进行选择，<span style="font-weight: bold;" data-type="strong">不过大部分场景下删除缓存操作简单，并且带来的副作用只是增加了一次 Cache Miss，是比较通用的处理方式。</span></p>
+<h2 id="①-先更新数据库，再更新缓存"><a href="#①-先更新数据库，再更新缓存" class="headerlink" title="① 先更新数据库，再更新缓存"></a>① 先更新数据库，再更新缓存</h2><p>这种方式就适合更新缓存的代价很小的数据，例如上面说的用户情况，库存数量这类数据，同样还是要注意线程安全的问题。</p>
+<p><span style="font-weight: bold;" data-type="strong">线程安全角度</span></p>
+<p>同时有请求 A 和请求 B 进行更新操作，那么会出现</p>
+<ol>
+<li>线程 A 更新了数据库</li>
+<li>线程 B 更新了数据库</li>
+<li>线程 B 更新了缓存</li>
+<li>线程 A 更新了缓存</li>
+</ol>
+<p>这就出现请求 A 更新缓存应该比请求 B 更新缓存早才对，但是因为网络等原因，B 却比 A 更早更新了缓存，这就导致了脏数据。</p>
+<p><span style="font-weight: bold;" data-type="strong">业务场景角度</span></p>
+<p>有如下两种不适合场景（前面已经暗示过）：</p>
+<ol>
+<li>如果你是一个写数据库场景比较多，而读数据场景比较少的业务需求，采用这种方案就会导致，数据压根还没读到，缓存就被频繁的更新，浪费性能</li>
+<li>如果你写入数据库的值，并不是直接写入缓存的，而是要经过一系列复杂的计算再写入缓存。那么，每次写入数据库后，都再次计算写入缓存的值，无疑是也浪费性能的</li>
+</ol>
+<h2 id="②-先更新缓存，再更新数据库"><a href="#②-先更新缓存，再更新数据库" class="headerlink" title="② 先更新缓存，再更新数据库"></a>② 先更新缓存，再更新数据库</h2><p>这种方式是最简单不过的了，很容易理解。</p>
+<p>但是肯定会想到，缓存更新成功了，数据库更新失败了怎么办？</p>
+<p>更简单了：重试机制</p>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610584.png" alt="image">​</p>
+<p>可参考资料：</p>
+<p> <a target="_blank" rel="noopener" href="https://www.cnblogs.com/rjzheng/p/9240611.html">操作的SQL有序决定了线程安全问题</a></p>
+<p> <a target="_blank" rel="noopener" href="https://juejin.im/post/5bdc257e6fb9a049ba410098">高性能：点赞功能</a></p>
+<h2 id="③-先删除缓存，再更新数据库"><a href="#③-先删除缓存，再更新数据库" class="headerlink" title="③ 先删除缓存，再更新数据库"></a>③ 先删除缓存，再更新数据库</h2><p>简单的想一下，好像这种方式不错，就算是第一步删除缓存成功，第二步写数据库失败，则只会引发一次 Cache Miss，对数据没有影响，其实仔细一想并发下也很容易导致了脏数据，例如</p>
+<ol>
+<li>请求 A 进行写操作，删除缓存</li>
+<li>请求 B 查询发现缓存不存在</li>
+<li>请求 B 去数据库查询得到旧值</li>
+<li>请求 B 将旧值写入缓存</li>
+<li>请求 A 将新值写入数据库</li>
+</ol>
+<p>这种情况就是那么的巧了，偏偏A进程改的时候，已经删除了缓存还没来得及更新写入数据，你B正好来查了，且B执行的还挺快</p>
+<h2 id="④-先更新数据库，再删除缓存"><a href="#④-先更新数据库，再删除缓存" class="headerlink" title="④ 先更新数据库，再删除缓存"></a>④ 先更新数据库，再删除缓存</h2><p>先说一下，国外有人提出了一个缓存更新套路，名为<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/azure/architecture/patterns/cache-aside"> Cache-Aside Pattern</a></p>
+<ul>
+<li><span style="font-weight: bold;" data-type="strong">失效</span>：应用程序先从 cache 取数据，没有得到，则从数据库中取数据，成功后，放到缓存中</li>
+<li><span style="font-weight: bold;" data-type="strong">命中</span>：应用程序从 cache 中取数据，渠道后返回</li>
+<li><span style="font-weight: bold;" data-type="strong">更新</span>：先把数据存到数据库中，成功后再让缓存失效</li>
+</ul>
+<p>更新操作就是先更新数据库，再删除缓存；读取操作先从缓存取数据，没有，则从数据库中取数据，成功后，放到缓存中</p>
+<p>为什么他们都用这种方式呢，这种情况不存在并发问题么? 答案是也存在，但是出现概率比第三种低，例如：</p>
+<ol>
+<li>请求缓存刚好失效</li>
+<li>请求A查询数据库，得一个旧值</li>
+<li>请求B将新值写入数据库</li>
+<li>请求B删除缓存</li>
+<li>请求A将查到的旧值写入缓存</li>
+</ol>
+<p>这样就出现脏数据了，然而，实际上出现的概率可能非常低，因为这个条件需要发生在读缓存时缓存失效，而且并发着有一个写操作。而实际上数据库的写操作会比读操作慢得多，而且还要锁表，而读操作必需在写操作前进入数据库操作，而又要晚于写操作删除缓存，所有的这些条件都具备的概率基本并不大，但是还是会有出现的概率。</p>
+<p>并且假如第一步写数据库成功，第二步删除缓存失败，这样也导致脏数据，请看解决方案。</p>
+<h2 id="方案-③-和-④-脏数据的解决方案"><a href="#方案-③-和-④-脏数据的解决方案" class="headerlink" title="方案 ③ 和 ④ 脏数据的解决方案"></a>方案 ③ 和 ④ 脏数据的解决方案</h2><p>那怎么解决呢，可以采用大名鼎鼎的<span style="font-weight: bold;" data-type="strong">延时双删策略(缓存双淘汰法)</span> ，可以将前面所造成的缓存脏数据，再次删除</p>
+<ol>
+<li>先删除(淘汰)缓存</li>
+<li>再写数据库（这两步和原来一样）</li>
+<li>休眠1秒，再次删除(淘汰)缓存</li>
+</ol>
+<p>或者是</p>
+<ol>
+<li>先写数据库</li>
+<li>再删除(淘汰)缓存（这两步和原来一样）</li>
+<li>休眠1秒，再次删除(淘汰)缓存</li>
+</ol>
+<p>这个1秒应该看你的业务场景，应该自行评估自己的项目的读数据业务逻辑的耗时，然后写数据的休眠时间则在读数据业务逻辑的耗时基础上，加几百毫秒即可，这么做确保读请求结束，写请求可以删除读请求造成的缓存脏数据。</p>
+<p>如果你用了 MySql 的读写分离架构怎么办？，例如：</p>
+<ol>
+<li>请求 A 进行写操作，删除缓存</li>
+<li>请求 A 将数据写入数据库了，(或者是先更新数据库，后删除缓存)</li>
+<li>请求 B 查询缓存发现，缓存没有值</li>
+<li>请求 B 去从库查询，这时，还没有完成主从同步，因此查询到的是旧值</li>
+<li>请求 B 将旧值写入缓存</li>
+<li>数据库完成主从同步，从库变为新值</li>
+</ol>
+<p>这种情景，就是数据不一致的原因，还是采用延时双删策略(缓存双淘汰法)，只是，休眠时间修改为在主从同步的延时时间基础上，加几百毫秒</p>
+<p><span style="font-weight: bold;" data-type="strong">并且为了性能更快，可以把第二次删除缓存可以做成异步的，这样不会阻塞请求了，如果再严谨点，防止第二次删除缓存失败，这个异步删除缓存可以加上重试机制，失败一直重试，直到成功。</span></p>
+<p>这里给出两种重试机制参考</p>
+<p>方案一</p>
+<ol>
+<li>更新数据库数据</li>
+<li>缓存因为种种问题删除失败</li>
+<li>将需要删除的 key 发送至消息队列</li>
+<li>自己消费消息，获得需要删除的 key</li>
+<li>继续重试删除操作，直到成功</li>
+</ol>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610285.png" alt="image">​</p>
+<p>然而，该方案有一个缺点，对业务线代码造成大量的侵入，于是有了方案二，启动一个订阅程序去订阅数据库的Binlog，获得需要操作的数据。在应用程序中，另起一段程序，获得这个订阅程序传来的信息，进行删除缓存操作</p>
+<p>方案二</p>
+<ol>
+<li>更新数据库数据</li>
+<li>数据库会将操作信息写入 binlog 日志当中</li>
+<li>订阅程序提取出所需要的数据以及key</li>
+<li>另起一段非业务代码，获得该信息</li>
+<li>尝试删除缓存操作，发现删除失败</li>
+<li>将这些信息发送至消息队列</li>
+<li>重新从消息队列中获得该数据，重试操作</li>
+</ol>
+<p>​<img src="https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401031610232.png" alt="image">​</p>
+<p>上述的订阅 Binlog 程序在 MySql 中有现成的中间件叫 Canal，可以完成订阅 Binlog 日志的功能，另外，重试机制，这里采用的是消息队列的方式。如果对一致性要求不是很高，直接在程序中另起一个线程，每隔一段时间去重试即可，这些大家可以灵活自由发挥，只是提供一个思路。</p>
+<p><span style="font-weight: bold;" data-type="strong">总结：</span> 大部分应该使用的都是第三种或第四种方式，如果都是采用延时双删策略(缓存双淘汰法)，可能区别不会很大，不过第四种方式出现脏数据概率是更小点，更多的话还是要结合自身业务场景使用，灵活变通。</p>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>通俗来讲：<span style="font-weight: bold;" data-type="strong">在技术领域中没有一种通用的解决方案可以解决所有问题</span>。缓存也是，解决了一个问题但也可能会引入新的问题。</p>
+<p><span style="font-weight: bold;" data-type="strong">缓存是把双刃剑</span>，一方面我们享受缓存带来的系统性能提升，另一方面引入缓存会提高系统复杂度，因为你要考虑缓存的失效、更新、一致性等问题。</p>
+<p>‍</p>
+<p>‍</p>
+<p>‍</p>
+</div><div class="article-licensing box"><div class="licensing-title"><p>分布式缓存全局认知</p><p><a href="https://luommy.github.io/post/distributed-cache-global-cognition-11klor.html">https://luommy.github.io/post/distributed-cache-global-cognition-11klor.html</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>作者</h6><p>luommy</p></div></div><div class="level-item is-narrow"><div><h6>发布于</h6><p>2024-01-03</p></div></div><div class="level-item is-narrow"><div><h6>更新于</h6><p>2024-01-03</p></div></div><div class="level-item is-narrow"><div><h6>许可协议</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/%E7%BC%93%E5%AD%98/">缓存</a></div><!--!--></article></div><div class="card"><div class="card-content"><h3 class="menu-label has-text-centered">喜欢这篇文章？打赏一下作者吧</h3><div class="buttons is-centered"><a class="button donate" data-type="wechat"><span class="icon is-small"><i class="fab fa-weixin"></i></span><span>微信</span><span class="qrcode"><img src="/" alt="微信"></span></a><a class="button donate" data-type="alipay"><span class="icon is-small"><i class="fab fa-alipay"></i></span><span>支付宝</span><span class="qrcode"><img src="/" alt="支付宝"></span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="afdian"><span class="icon is-small"><i class="fas fa-charging-station"></i></span><span>爱发电</span></a><a class="button donate" href="/" target="_blank" rel="noopener" data-type="buymeacoffee"><span class="icon is-small"><i class="fas fa-coffee"></i></span><span>送我杯咖啡</span></a></div></div></div><nav class="post-navigation mt-4 level is-mobile"><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/post/using-godebug-more-intuitively-to-understand-the-go-scheduling-process-z1bawyb.html"><span class="level-item">利用GODEBUG更直观地理解 Go 调度过程</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><div class="card"><div class="card-content"><h3 class="title is-5">评论</h3><div class="content" id="waline-thread"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@waline/client@2.6.3/dist/waline.css"><script src="https://cdn.jsdelivr.net/npm/@waline/client@2.6.3/dist/waline.js"></script><script>Waline.init({
+            el: '#waline-thread',
+            serverURL: "https://myblog-vercel.vercel.app/",
+            path: window.location.pathname,
+            lang: "zh-CN",
+            
+            emoji: ["https://cdn.jsdelivr.net/gh/walinejs/emojis/weibo"],
+            dark: "auto",
+            meta: ["nick","mail","link"],
+            requiredMeta: [],
+            login: "disable",
+            
+            pageSize: 10,
+            imageUploader: false,
+            highlighter: false,
+            texRenderer: false,
+            search: false,
+            pageview: false,
+            comment: false,
+            copyright: true,
+        });</script></div></div></div><div class="column column-left is-4-tablet is-4-desktop is-4-widescreen  order-1 is-sticky"><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">目录</h3><ul class="menu-list"><li><a class="level is-mobile" href="#背景与介绍"><span class="level-left"><span class="level-item">1</span><span class="level-item">背景与介绍</span></span></a></li><li><a class="level is-mobile" href="#本地缓存与分布式缓存"><span class="level-left"><span class="level-item">2</span><span class="level-item">本地缓存与分布式缓存</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#本地缓存-JDK-Map"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">本地缓存 JDK Map</span></span></a></li><li><a class="level is-mobile" href="#本地缓存"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">本地缓存</span></span></a></li><li><a class="level is-mobile" href="#分布式缓存"><span class="level-left"><span class="level-item">2.3</span><span class="level-item">分布式缓存</span></span></a></li></ul></li><li><a class="level is-mobile" href="#多级缓存"><span class="level-left"><span class="level-item">3</span><span class="level-item">多级缓存</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#操作手法"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">操作手法</span></span></a></li><li><a class="level is-mobile" href="#删除缓存与更新缓存"><span class="level-left"><span class="level-item">3.2</span><span class="level-item">删除缓存与更新缓存</span></span></a></li><li><a class="level is-mobile" href="#①-先更新数据库，再更新缓存"><span class="level-left"><span class="level-item">3.3</span><span class="level-item">① 先更新数据库，再更新缓存</span></span></a></li><li><a class="level is-mobile" href="#②-先更新缓存，再更新数据库"><span class="level-left"><span class="level-item">3.4</span><span class="level-item">② 先更新缓存，再更新数据库</span></span></a></li><li><a class="level is-mobile" href="#③-先删除缓存，再更新数据库"><span class="level-left"><span class="level-item">3.5</span><span class="level-item">③ 先删除缓存，再更新数据库</span></span></a></li><li><a class="level is-mobile" href="#④-先更新数据库，再删除缓存"><span class="level-left"><span class="level-item">3.6</span><span class="level-item">④ 先更新数据库，再删除缓存</span></span></a></li><li><a class="level is-mobile" href="#方案-③-和-④-脏数据的解决方案"><span class="level-left"><span class="level-item">3.7</span><span class="level-item">方案 ③ 和 ④ 脏数据的解决方案</span></span></a></li></ul></li><li><a class="level is-mobile" href="#小结"><span class="level-left"><span class="level-item">4</span><span class="level-item">小结</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="tags"><div class="card-content"><div class="menu"><h3 class="menu-label">标签</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/tags/golang/"><span class="tag">golang</span><span class="tag">6</span></a></div><div class="control"><a class="tags has-addons" href="/tags/timeline/"><span class="tag">timeline</span><span class="tag">5</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/"><span class="tag">并发编程</span><span class="tag">3</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%A2%86%E5%9F%9F%E7%AE%97%E6%B3%95/"><span class="tag">领域算法</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E7%9F%A5%E8%AF%86%E4%BD%93%E7%B3%BB/"><span class="tag">知识体系</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/docker/"><span class="tag">docker</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E7%BC%93%E5%AD%98/"><span class="tag">缓存</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/goland%E6%8A%80%E5%B7%A7/"><span class="tag">goland技巧</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/%E9%AB%98%E5%B9%B6%E5%8F%91/"><span class="tag">高并发</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/Myblog/"><span class="tag">Myblog</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/mysql/"><span class="tag">mysql</span><span class="tag">1</span></a></div><div class="control"><a class="tags has-addons" href="/tags/nacos/"><span class="tag">nacos</span><span class="tag">1</span></a></div></div></div></div></div><div class="card widget" data-type="recent-posts"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content"><p class="date"><time dateTime="2024-01-03T08:09:58.000Z">2024-01-03</time></p><p class="title"><a href="/post/distributed-cache-global-cognition-11klor.html">分布式缓存全局认知</a></p><p class="categories"><a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E3%80%81%E5%BE%AE%E6%9C%8D%E5%8A%A1%E3%80%81%E6%9E%B6%E6%9E%84/">分布式、微服务、架构</a> / <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E3%80%81%E5%BE%AE%E6%9C%8D%E5%8A%A1%E3%80%81%E6%9E%B6%E6%9E%84/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-12-28T02:40:09.000Z">2023-12-28</time></p><p class="title"><a href="/post/using-godebug-more-intuitively-to-understand-the-go-scheduling-process-z1bawyb.html">利用GODEBUG更直观地理解 Go 调度过程</a></p><p class="categories"><a href="/categories/Golang/">Golang</a> / <a href="/categories/Golang/%E6%A0%B8%E5%BF%83%E5%BA%95%E5%B1%82/">核心底层</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-12-26T05:42:26.000Z">2023-12-26</time></p><p class="title"><a href="/post/go-parallel-programming-channel-z13snhx.html">Go并发编程 | Channel</a></p><p class="categories"><a href="/categories/Golang/">Golang</a> / <a href="/categories/Golang/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-12-12T03:35:58.000Z">2023-12-12</time></p><p class="title"><a href="/post/gozen-me-rang-xie-cheng-pao-yi-ban-jiu-tui-chu-xipuv.html">Go怎么让协程跑一半就退出？</a></p><p class="categories"><a href="/categories/Golang/">Golang</a> / <a href="/categories/Golang/%E6%A0%B8%E5%BF%83%E5%BA%95%E5%B1%82/">核心底层</a></p></div></article><article class="media"><div class="media-content"><p class="date"><time dateTime="2023-12-07T06:14:50.000Z">2023-12-07</time></p><p class="title"><a href="/post/20231207-thursday-1igq3d.html">2023-12-07 星期四</a></p></div></article></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="林庭晚阖" height="28"></a><p class="is-size-7"><span>&copy; 2024 luommy</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("zh-cn");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="回到顶端" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "此网站使用Cookie来改善您的体验。",
+          dismiss: "知道了！",
+          allow: "允许使用Cookie",
+          deny: "拒绝",
+          link: "了解更多",
+          policy: "Cookie政策",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.css"><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/katex.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/contrib/auto-render.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/katex@0.15.1/dist/contrib/mhchem.min.js" defer></script><script>window.addEventListener("load", function() {
+            document.querySelectorAll('[role="article"] > .content').forEach(function(element) {
+                renderMathInElement(element);
+            });
+        });</script><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script><!-- hexo injector body_end start -->
+  <script type="text/javascript" src="/custom/custom.js"></script>
+<!-- hexo injector body_end end --></body></html>
