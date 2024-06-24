@@ -1,7 +1,7 @@
 ---
-title: 种分布式事务解决方案
+title: 8种分布式事务解决方案
 date: '2024-01-18 15:26:50'
-updated: '2024-01-18 16:14:34'
+updated: '2024-06-24 09:20:46'
 excerpt: 全面认识 2PC、3PC、TCC、Saga、分布式锁、本地消息表、最终一致性、最大努力通知
 tags:
   - 分布式
@@ -23,7 +23,7 @@ toc: true
 
 参考：[PDAI帮助你构筑分布式事务的知识体系](https://www.pdai.tech/images/arch/arch-z-transection-1.png)
 
-​![image](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401181616453.png)​
+​![image](assets/image-20240118155610-xgc12fr.png)​
 
 “八奇技”:
 
@@ -33,22 +33,22 @@ toc: true
 * Saga基于补偿的事务（拆分，然后本地回退）
 * 分布式锁（常见）
 * 本地消息表（本地维护的消息表+MQ）
-* 最终一致性（<span style="font-weight: bold;" data-type="strong">不再依赖本地数据库事务，去掉了本地维护的消息表</span>）代表RocketMQ?
+* 最终一致性（**不再依赖本地数据库事务，去掉了本地维护的消息表**）代表RocketMQ?
 * 最大努力通知（系统不会无限重试，通常结合人为参与）
 
 没想到吧，除了分布式锁还有七种方式可以解决分布式一致性问题，其实严格来说分布式事务还分刚性和柔性
 
-<span style="font-weight: bold;" data-type="strong">刚性事务</span>：分布式理论的CP，遵循ACID，对数据要求强一致性。（金融行业）
+**刚性事务**：分布式理论的CP，遵循ACID，对数据要求强一致性。（金融行业）
 
-<span style="font-weight: bold;" data-type="strong">柔性事务</span>：分布式理论的AP，遵循BASE，允许一定时间内不同节点的数据不一致，但要求最终一致。（电商）
+**柔性事务**：分布式理论的AP，遵循BASE，允许一定时间内不同节点的数据不一致，但要求最终一致。（电商）
 
 #  引言
 
-在上篇文章中，我们已经谈到了分布式中至关重要的两个理论：<span style="font-weight: bold;" data-type="strong">CAP 理论和 BASE 理论</span>。
+在上篇文章中，我们已经谈到了分布式中至关重要的两个理论：**CAP 理论和 BASE 理论**。
 
 > 时光穿梭机：[深入浅出分布式、CAP 和 BASE 理论](http://mp.weixin.qq.com/s?__biz=MzI5Nzk2MDgwNg==&mid=2247484896&idx=1&sn=60dd09486fc9ecc652af917d8a311419&chksm=ecac51e9dbdbd8ffc10b79699ea7e4a8fb00aabc743b15cc5c3311970a9e3046592cbb879364&scene=21#wechat_redirect)
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401181616415.jpg)​
+​![图片](assets/640-20240118152650-72j1873.jpg)​
 
 今天，小❤将带大家探讨分布式事务里的“八奇技”，帮助大家在实际的分布式系统中更好地运用事务。
 
@@ -62,7 +62,7 @@ toc: true
 
 二阶段提交协议（Two-phase commit protocol），简称 2PC。两阶段提交是一种强一致性事务协议，它分为准备阶段和提交阶段。
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401181616112.png)​
+​![图片](assets/640-20240118152650-tzrinay.png)​
 
 在准备阶段，协调者节点询问所有参与者是否准备好提交事务，如果所有参与者都答应准备好了，那么在提交阶段，协调者会通知所有参与者提交事务。
 
@@ -76,33 +76,33 @@ toc: true
 
 #### 优点
 
-1. <span style="font-weight: bold;" data-type="strong">原子性保证：</span> 2PC 协议可以保证所有参与者要么全部提交成功，要么全部失败回滚，从而实现跨多个分布式节点的事务的原子性。
-2. <span style="font-weight: bold;" data-type="strong">简单直观：</span> 2PC 的设计思路简单，逻辑清晰，容易理解，这使得它在很多传统的数据库和分布式系统中得到了广泛的应用，比如 MySQL 从 5.5 版本开始支持。
+1. **原子性保证：** 2PC 协议可以保证所有参与者要么全部提交成功，要么全部失败回滚，从而实现跨多个分布式节点的事务的原子性。
+2. **简单直观：** 2PC 的设计思路简单，逻辑清晰，容易理解，这使得它在很多传统的数据库和分布式系统中得到了广泛的应用，比如 MySQL 从 5.5 版本开始支持。
 
 #### 缺点
 
-1. <span style="font-weight: bold;" data-type="strong">同步阻塞：</span> 在 2PC 的第一阶段，所有参与者在响应协调者的准备请求后，必须等待最终的提交或回滚指令。这期间，所有参与者都处于阻塞状态，无法进行其他操作，导致资源锁定时间较长，在高并发场景下很明显不太适用。
-2. <span style="font-weight: bold;" data-type="strong">单点故障：</span> 如果协调者在第二阶段崩溃，参与者可能会无限期地等待指令，因为它们不知道应该提交还是回滚。这使得整个系统容易受到单点故障的影响。
-3. <span style="font-weight: bold;" data-type="strong">数据不一致：</span> 如果在第二阶段中协调者向某些参与者发送了提交指令，而其他参与者因为网络问题没有收到指令，那么这些没有收到指令的参与者可能会选择回滚，导致数据不一致。
-4. <span style="font-weight: bold;" data-type="strong">复杂的恢复机制：</span> 当系统崩溃后，恢复过程非常复杂，所有参与者必须保持足够的信息以便在系统恢复后能够继续完成 2PC 协议。
+1. **同步阻塞：** 在 2PC 的第一阶段，所有参与者在响应协调者的准备请求后，必须等待最终的提交或回滚指令。这期间，所有参与者都处于阻塞状态，无法进行其他操作，导致资源锁定时间较长，在高并发场景下很明显不太适用。
+2. **单点故障：** 如果协调者在第二阶段崩溃，参与者可能会无限期地等待指令，因为它们不知道应该提交还是回滚。这使得整个系统容易受到单点故障的影响。
+3. **数据不一致：** 如果在第二阶段中协调者向某些参与者发送了提交指令，而其他参与者因为网络问题没有收到指令，那么这些没有收到指令的参与者可能会选择回滚，导致数据不一致。
+4. **复杂的恢复机制：** 当系统崩溃后，恢复过程非常复杂，所有参与者必须保持足够的信息以便在系统恢复后能够继续完成 2PC 协议。
 
 ### 奇技2）3PC
 
 三阶段提交协议（Three-phase commit protocol），简称 3PC。三阶段提交（3PC）是两阶段提交（2PC）的改进版本，它旨在减少在协调者和参与者之间的阻塞时间，同时增加系统在某些故障情况下的容错能力，以下是 3PC 的三个阶段：
 
-1. <span style="font-weight: bold;" data-type="strong">CanCommit 阶段</span>
+1. **CanCommit 阶段**
 
-    * <span style="font-weight: bold;" data-type="strong">协调者行动</span>: 发送 CanCommit 请求到所有参与者，并等待回应。
-    * <span style="font-weight: bold;" data-type="strong">参与者行动</span>: 如果参与者可以提交事务，它就返回 Yes，并进入预备状态；如果不能提交，则返回 No。
-2. <span style="font-weight: bold;" data-type="strong">PreCommit 阶段</span>
+    * **协调者行动**: 发送 CanCommit 请求到所有参与者，并等待回应。
+    * **参与者行动**: 如果参与者可以提交事务，它就返回 Yes，并进入预备状态；如果不能提交，则返回 No。
+2. **PreCommit 阶段**
 
-* <span style="font-weight: bold;" data-type="strong">协调者行动</span>: 如果所有参与者回答 Yes，协调者发送 PreCommit 请求给所有参与者，并进入 Prepared 阶段；如果有任何参与者回答 No，或者等待超时，协调者发送 abort 请求。
-* <span style="font-weight: bold;" data-type="strong">参与者行动</span>: 在收到 PreCommit 请求后，参与者会执行事务操作，写入日志，但不提交，然后响应 ACK，并等待最终指令。如果参与者在这个阶段超时没有收到协调者的消息，它将中止事务。
+* **协调者行动**: 如果所有参与者回答 Yes，协调者发送 PreCommit 请求给所有参与者，并进入 Prepared 阶段；如果有任何参与者回答 No，或者等待超时，协调者发送 abort 请求。
+* **参与者行动**: 在收到 PreCommit 请求后，参与者会执行事务操作，写入日志，但不提交，然后响应 ACK，并等待最终指令。如果参与者在这个阶段超时没有收到协调者的消息，它将中止事务。
 
-3. <span style="font-weight: bold;" data-type="strong">DoCommit 阶段</span>
+3. **DoCommit 阶段**
 
-* <span style="font-weight: bold;" data-type="strong">协调者行动</span>: 一旦协调者收到所有参与者的 ACK，它会进入 DoCommit 阶段，发送 commit 请求给所有参与者。
-* <span style="font-weight: bold;" data-type="strong">参与者行动</span>: 参与者在收到 commit 请求后，提交事务，释放所有事务锁定的资源，并向协调者发送完成消息。
+* **协调者行动**: 一旦协调者收到所有参与者的 ACK，它会进入 DoCommit 阶段，发送 commit 请求给所有参与者。
+* **参与者行动**: 参与者在收到 commit 请求后，提交事务，释放所有事务锁定的资源，并向协调者发送完成消息。
 
 与 2PC 相比，3PC 在 PreCommit 阶段引入了超时机制，允许参与者在没有接收到协调者的最终指令时自行决定中止事务，这减少了协调者成为单点故障的可能性。
 
@@ -110,17 +110,17 @@ toc: true
 
 3PC通常用于需要较高可靠性的分布式系统中，尤其是在那些不能接受长时间锁定资源的场景。例如：
 
-1. <span style="font-weight: bold;" data-type="strong">分布式数据库系统：</span> 分布式数据库可能使用 3PC 来确保跨多个数据中心的事务一致性。例如，一个全球性的银行可能需要在不同国家的分支机构之间处理账户转账，这时3PC可以减少在网络延迟或某个分支机构失去响应时的影响。
-2. <span style="font-weight: bold;" data-type="strong">电信网络：</span> 在电信运营商的计费系统中，可能会使用 3PC 来同步跨多个服务点的账单信息，这些系统通常要求高可用性和快速响应，因此不能长时间阻塞。
-3. <span style="font-weight: bold;" data-type="strong">大型分布式系统：</span> 对于需要跨多个服务和组件协调工作的大型分布式系统，比如云计算平台，3PC可以在保持事务一致性的同时，减少参与者等待协调者指令的时间。
+1. **分布式数据库系统：** 分布式数据库可能使用 3PC 来确保跨多个数据中心的事务一致性。例如，一个全球性的银行可能需要在不同国家的分支机构之间处理账户转账，这时3PC可以减少在网络延迟或某个分支机构失去响应时的影响。
+2. **电信网络：** 在电信运营商的计费系统中，可能会使用 3PC 来同步跨多个服务点的账单信息，这些系统通常要求高可用性和快速响应，因此不能长时间阻塞。
+3. **大型分布式系统：** 对于需要跨多个服务和组件协调工作的大型分布式系统，比如云计算平台，3PC可以在保持事务一致性的同时，减少参与者等待协调者指令的时间。
 
 #### 使用 3PC 的考虑因素
 
 虽然 3PC 提供了比 2PC 更好的容错性和减少了阻塞的时间，但它仍然有一些缺点：
 
-* <span style="font-weight: bold;" data-type="strong">复杂性</span>：3PC 比 2PC 更复杂，需要更多的消息交换和更多的状态管理。
-* <span style="font-weight: bold;" data-type="strong">性能开销</span>：3PC 引入了额外的阶段和网络通信，可能会导致更大的性能开销。
-* <span style="font-weight: bold;" data-type="strong">极端情况</span>：即使是 3PC，在某些极端的网络分区或多点故障情况下也可能无法保证事务的正确性。
+* **复杂性**：3PC 比 2PC 更复杂，需要更多的消息交换和更多的状态管理。
+* **性能开销**：3PC 引入了额外的阶段和网络通信，可能会导致更大的性能开销。
+* **极端情况**：即使是 3PC，在某些极端的网络分区或多点故障情况下也可能无法保证事务的正确性。
 
 因此，在实际应用中，需要权衡 3PC 带来的好处与其复杂性和性能开销之间的关系，确保它适合特定的业务场景和系统需求。
 
@@ -128,13 +128,13 @@ toc: true
 
 ### 奇技3）TCC
 
-TCC（Try-Confirm-Cancel）是一种应用层的分布式事务解决方案，它将事务分为三个步骤：<span style="font-weight: bold;" data-type="strong">尝试（Try）、确认（Confirm）和取消（Cancel）</span> ：
+TCC（Try-Confirm-Cancel）是一种应用层的分布式事务解决方案，它将事务分为三个步骤：**尝试（Try）、确认（Confirm）和取消（Cancel）** ：
 
 * 在 Try 阶段，会预留必要的业务资源；
 * 在 Confirm 阶段，如果所有相关的业务操作都成功了，则正式执行业务操作；
 * 如果有操作失败，则在 Cancel 阶段执行补偿操作，回滚之前的预留资源。
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401181616139.png)​
+​![图片](assets/640-20240118152650-2d0hjvk.png)​
 
 假设我们买一张从深圳到北京的火车票，票价为 360 元，TCC 分为这三个步骤：
 
@@ -171,17 +171,17 @@ Saga 是一种长事务的解决方案，它将一个大的分布式事务拆分
 
 #### 优点
 
-1. <span style="font-weight: bold;" data-type="strong">灵活性</span>：Saga 允许每个小事务独立管理，提高了系统的灵活性。
-2. <span style="font-weight: bold;" data-type="strong">减少资源锁定</span>：由于 Saga 不需要在事务执行过程中持续占用资源，因此可以减少长时间的资源锁定，提高系统的并发能力。
-3. <span style="font-weight: bold;" data-type="strong">容错性</span>：Saga 通过定义补偿操作来处理失败，增强了系统的容错能力。
-4. <span style="font-weight: bold;" data-type="strong">适用于微服务架构</span>：在微服务架构中，Saga 可以跨服务边界管理事务，每个服务独立处理自己的事务和补偿逻辑。
+1. **灵活性**：Saga 允许每个小事务独立管理，提高了系统的灵活性。
+2. **减少资源锁定**：由于 Saga 不需要在事务执行过程中持续占用资源，因此可以减少长时间的资源锁定，提高系统的并发能力。
+3. **容错性**：Saga 通过定义补偿操作来处理失败，增强了系统的容错能力。
+4. **适用于微服务架构**：在微服务架构中，Saga 可以跨服务边界管理事务，每个服务独立处理自己的事务和补偿逻辑。
 
 #### 缺点
 
-1. <span style="font-weight: bold;" data-type="strong">复杂性</span>：实现 Saga 需要定义每个小事务的补偿操作，这可能会增加系统的复杂性。
-2. <span style="font-weight: bold;" data-type="strong">数据一致性</span>：Saga 不能提供 2PC 那样的即时一致性保证，它只能保证最终一致性，这在某些业务场景中可能是不够的。
-3. <span style="font-weight: bold;" data-type="strong">补偿操作的难度</span>：在某些情况下，补偿操作可能很难实现，尤其是当事务有副作用时（比如发送了一个不可撤销的通知）。
-4. <span style="font-weight: bold;" data-type="strong">测试和调试</span>：由于 Saga 涉及多个服务和补偿逻辑，测试和调试可能会更加困难。
+1. **复杂性**：实现 Saga 需要定义每个小事务的补偿操作，这可能会增加系统的复杂性。
+2. **数据一致性**：Saga 不能提供 2PC 那样的即时一致性保证，它只能保证最终一致性，这在某些业务场景中可能是不够的。
+3. **补偿操作的难度**：在某些情况下，补偿操作可能很难实现，尤其是当事务有副作用时（比如发送了一个不可撤销的通知）。
+4. **测试和调试**：由于 Saga 涉及多个服务和补偿逻辑，测试和调试可能会更加困难。
 
 在选择使用 Saga 模式时，需要仔细考虑业务场景是否适合最终一致性，以及是否能够有效地实现和管理补偿逻辑。对于那些需要高度一致性保证的场景，可能需要考虑其他事务管理机制。
 
@@ -191,13 +191,13 @@ Saga 是一种长事务的解决方案，它将一个大的分布式事务拆分
 
 > 不知道分布式锁或者不了解如何实现的，可以看这篇文章：[说出来你可能不信，分布式锁竟然这么简单...](http://mp.weixin.qq.com/s?__biz=MzI5Nzk2MDgwNg==&mid=2247485092&idx=1&sn=f948b050ae2656e00e841c14c75c9aef&chksm=ecac52addbdbdbbb0b7c622972cdac50b25e4be177993df8282ba9f6f22fab11ea37ecd9cf11&scene=21#wechat_redirect)
 
-* <span style="font-weight: bold;" data-type="strong">项目/公司</span>: 使用 Redis、ZooKeeper 等实现分布式锁的系统。
-* <span style="font-weight: bold;" data-type="strong">实用场景</span>: 在电商秒杀活动中，防止超卖现象，确保同一时间只有一个请求能够对库存数量进行修改。
-* <span style="font-weight: bold;" data-type="strong">推荐场景</span>: 当需要协调多个节点对共享资源进行访问控制时，分布式锁是一个有效的解决方案。
+* **项目/公司**: 使用 Redis、ZooKeeper 等实现分布式锁的系统。
+* **实用场景**: 在电商秒杀活动中，防止超卖现象，确保同一时间只有一个请求能够对库存数量进行修改。
+* **推荐场景**: 当需要协调多个节点对共享资源进行访问控制时，分布式锁是一个有效的解决方案。
 
 ### 奇技6）本地消息表
 
-​![图片](https://cdn.jsdelivr.net/gh/luommy/myblogimg@img/myblog/202401181616967.png)​
+​![图片](assets/640-20240118152650-0bhxt08.png)​
 
 本地消息表是一种确保分布式事务最终一致性的方法。它的工作原理是：
 
@@ -212,7 +212,7 @@ Saga 是一种长事务的解决方案，它将一个大的分布式事务拆分
 
 ### 奇技7）可靠消息最终一致性
 
-通过可靠消息服务保证消息的可靠传输，并在消息消费者那里进行本地事务处理，从而实现最终一致性，所以又被称作<span style="font-weight: bold;" data-type="strong">消息事务</span>。如果消息处理失败，可以重试或者进行人工干预。
+通过可靠消息服务保证消息的可靠传输，并在消息消费者那里进行本地事务处理，从而实现最终一致性，所以又被称作**消息事务**。如果消息处理失败，可以重试或者进行人工干预。
 
 执行流程：
 
@@ -223,14 +223,14 @@ Saga 是一种长事务的解决方案，它将一个大的分布式事务拆分
   * 如果事务执行失败，则回滚，消息中间件将这条 prepare 消息删除
 * 消费端接收到消息进行消费，如果消费失败，则不断重试
 
-这种方案也是实现了 <span style="font-weight: bold;" data-type="strong">「最终一致性」</span> ，和本地消息表类似，但是对比本地消息表实现方案，消息事务不需要再建消息表，而是将消息中间件的机制去做的， <span style="font-weight: bold;" data-type="strong">「不再依赖本地数据库事务」</span> 了。
+这种方案也是实现了 **「最终一致性」** ，和本地消息表类似，但是对比本地消息表实现方案，消息事务不需要再建消息表，而是将消息中间件的机制去做的， **「不再依赖本地数据库事务」** 了。
 
-所以这种方案更适用于高并发的场景，目前市面上实现该方案的 <span style="font-weight: bold;" data-type="strong">「只有阿里的 RocketMQ」</span> 。
+所以这种方案更适用于高并发的场景，目前市面上实现该方案的 **「只有阿里的 RocketMQ」** 。
 
 这里作者说只有Rocket MQ保持怀疑态度，结合ChatGPT4还了解到还有国外的：
 
-* <span style="font-weight: bold;" data-type="strong">Amazon DynamoDB</span>: Amazon 的 DynamoDB 是一个键值存储服务，它使用最终一致性模型来确保高可用性和分区容错性。
-* <span style="font-weight: bold;" data-type="strong">Apache Cassandra</span>: Cassandra 是一个分布式NoSQL数据库，设计用于处理大量数据跨多个服务器的情况。
+* **Amazon DynamoDB**: Amazon 的 DynamoDB 是一个键值存储服务，它使用最终一致性模型来确保高可用性和分区容错性。
+* **Apache Cassandra**: Cassandra 是一个分布式NoSQL数据库，设计用于处理大量数据跨多个服务器的情况。
 
 ### 奇技8）最大努力通知原则
 
@@ -248,8 +248,8 @@ Saga 是一种长事务的解决方案，它将一个大的分布式事务拆分
 
 在选择分布式事务解决方案时，需要根据业务需求、系统复杂度、性能要求等因素进行权衡。
 
-例如，对于业务场景要求<span style="font-weight: bold;" data-type="strong">数据的一致性非常高</span>，且可以接受一定程度的性能损失时，2PC 或者 3PC 是很好的选择。
+例如，对于业务场景要求**数据的一致性非常高**，且可以接受一定程度的性能损失时，2PC 或者 3PC 是很好的选择。
 
-对于<span style="font-weight: bold;" data-type="strong">复杂业务流程中的分布式事务</span>，需要在业务层进行更细粒度控制时，TCC 是一个好的选择。比如，用户在电商平台下单购买商品，涉及到库存、账户余额、积分等多个服务的数据变更。
+对于**复杂业务流程中的分布式事务**，需要在业务层进行更细粒度控制时，TCC 是一个好的选择。比如，用户在电商平台下单购买商品，涉及到库存、账户余额、积分等多个服务的数据变更。
 
-而对于<span style="font-weight: bold;" data-type="strong">可容忍短时间内数据不一致的业务</span>，则可以考虑最终一致性相关的解决方案，如：本地消息表、消息事务及最大努力通知方案等等。
+而对于**可容忍短时间内数据不一致的业务**，则可以考虑最终一致性相关的解决方案，如：本地消息表、消息事务及最大努力通知方案等等。
